@@ -1,15 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { Logo, ThemeToggle, Icons } from '../components/ui';
-import { IMG_LOGIN_BG, IMG_LOGO } from '../constants/images';
 import { authService } from '../services/api';
+import {
+  IMG_LOGIN_BG,
+  IMG_REST_SPICE_ROUTE,
+  IMG_REST_PIZZA_POINT,
+  IMG_REST_BURGER_HOUSE,
+  IMG_REST_OCEAN_DELIGHT,
+} from '../constants/images';
 
-const QUOTES = [
-  { text: 'Good food is the foundation of genuine happiness.', author: 'Auguste Escoffier' },
-  { text: 'People who love to eat are always the best people.', author: 'Julia Child' },
-  { text: 'One cannot think well, love well, sleep well, if one has not dined well.', author: 'Virginia Woolf' },
+const SLIDES = [
+  {
+    img: IMG_LOGIN_BG,
+    text: 'Good food is the foundation of genuine happiness.',
+    author: 'Auguste Escoffier',
+  },
+  {
+    img: IMG_REST_SPICE_ROUTE,
+    text: 'People who love to eat are always the best people.',
+    author: 'Julia Child',
+  },
+  {
+    img: IMG_REST_PIZZA_POINT,
+    text: 'One cannot think well, love well, sleep well, if one has not dined well.',
+    author: 'Virginia Woolf',
+  },
+  {
+    img: IMG_REST_OCEAN_DELIGHT,
+    text: 'Life is uncertain. Eat dessert first.',
+    author: 'Ernestine Ulmer',
+  },
 ];
 
 export default function Login() {
@@ -19,7 +42,14 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [remember, setRemember] = useState(true);
-  const [quoteIdx, setQuoteIdx] = useState(0);
+  const [slideIdx, setSlideIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSlideIdx((i) => (i + 1) % SLIDES.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -52,7 +82,20 @@ export default function Login() {
       >
         {/* Top bar */}
         <div className="flex items-center justify-between mb-10">
-          <Logo onClick={() => navigate('/')} />
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 text-sm font-semibold transition-colors cursor-pointer hover:text-accent border-none bg-transparent p-0"
+              style={{ color: subColor }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+              Back
+            </button>
+            <Logo onClick={() => navigate('/')} />
+          </div>
           <ThemeToggle />
         </div>
 
@@ -61,27 +104,36 @@ export default function Login() {
           <h1 className="font-display font-black text-3xl mb-1.5">
             Welcome back 👋
           </h1>
-          <p className="mb-4" style={{ color: subColor, fontSize: 15 }}>Sign in to continue to your account</p>
-          
-          <button
-            onClick={() => {
-              setEmail('admin@delicious.com');
-              setPassword('admin123');
-              setErrorMsg('');
-            }}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold rounded-full px-3 py-1.5 border border-dashed hover:bg-opacity-20 cursor-pointer transition-all duration-200"
-            style={{
-              borderColor: '#F5B301',
-              background: 'rgba(245,179,1,0.08)',
-              color: '#F5B301',
-            }}
-          >
-            ⚡ Quick Login: Super Admin
-          </button>
         </div>
 
         {/* Form fields */}
-        <div className="flex flex-col gap-5">
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            if (loading) return;
+            setErrorMsg('');
+            if (!email || !password) {
+              setErrorMsg('Please fill in both email and password');
+              return;
+            }
+            setLoading(true);
+            try {
+              const res = await authService.login(email, password);
+              if (res.success) {
+                if (res.user.role === 'admin') {
+                  navigate('/admin');
+                } else {
+                  setErrorMsg('Access denied. Currently only Super Admin dashboard is built!');
+                }
+              }
+            } catch (err) {
+              setErrorMsg(err.message);
+            } finally {
+              setLoading(false);
+            }
+          }}
+        >
           {/* Email */}
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: labelColor }}>
@@ -93,6 +145,8 @@ export default function Login() {
               </span>
               <input
                 type="text"
+                name="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email or phone number"
@@ -121,6 +175,8 @@ export default function Login() {
               </span>
               <input
                 type={showPass ? 'text' : 'password'}
+                name="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
@@ -136,6 +192,7 @@ export default function Login() {
                 onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.background = inputBg; }}
               />
               <button
+                type="button"
                 onClick={() => setShowPass((s) => !s)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent cursor-pointer"
                 style={{ color: subColor }}
@@ -164,7 +221,7 @@ export default function Login() {
               </div>
               <span className="text-sm" style={{ color: labelColor }}>Remember me</span>
             </label>
-            <button className="text-sm font-semibold text-accent border-none bg-transparent cursor-pointer hover:underline">
+            <button type="button" className="text-sm font-semibold text-accent border-none bg-transparent cursor-pointer hover:underline">
               Forgot password?
             </button>
           </div>
@@ -178,33 +235,11 @@ export default function Login() {
 
           {/* Sign In button */}
           <motion.button
+            type="submit"
             whileHover={!loading ? { y: -2, boxShadow: '0 8px 28px rgba(245,179,1,0.4)' } : {}}
             whileTap={!loading ? { scale: 0.98 } : {}}
             className={`w-full rounded-full font-bold text-base flex items-center justify-center gap-2 border-none cursor-pointer transition-all duration-200 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             style={{ background: '#F5B301', color: '#000', padding: '15px', fontFamily: 'DM Sans, sans-serif' }}
-            onClick={async () => {
-              if (loading) return;
-              setErrorMsg('');
-              if (!email || !password) {
-                setErrorMsg('Please fill in both email and password');
-                return;
-              }
-              setLoading(true);
-              try {
-                const res = await authService.login(email, password);
-                if (res.success) {
-                  if (res.user.role === 'admin') {
-                    navigate('/admin');
-                  } else {
-                    setErrorMsg('Access denied. Currently only Super Admin dashboard is built!');
-                  }
-                }
-              } catch (err) {
-                setErrorMsg(err.message);
-              } finally {
-                setLoading(false);
-              }
-            }}
           >
             {loading ? 'Signing In...' : 'Sign In'}
             {!loading && (
@@ -213,7 +248,7 @@ export default function Login() {
               </svg>
             )}
           </motion.button>
-        </div>
+        </form>
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-6">
@@ -257,49 +292,63 @@ export default function Login() {
         </p>
       </motion.div>
 
-      {/* RIGHT PANEL — Food image + quote */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="hidden md:flex flex-1 relative overflow-hidden"
-      >
-        <img src={IMG_LOGIN_BG} alt="Food" className="absolute inset-0 w-full h-full object-cover" />
-        {/* Dark overlay */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.1) 100%)' }} />
+      {/* RIGHT PANEL — Slideshow */}
+      <div className="hidden md:flex flex-1 relative overflow-hidden">
+
+        {/* Stacked background images — always mounted, crossfade via opacity */}
+        {SLIDES.map((slide, i) => (
+          <motion.img
+            key={i}
+            src={slide.img}
+            alt="Food"
+            className="absolute inset-0 w-full h-full object-cover"
+            animate={{ opacity: i === slideIdx ? 0.55 : 0 }}
+            transition={{ duration: 0.9, ease: 'easeInOut' }}
+            style={{ zIndex: i === slideIdx ? 1 : 0 }}
+          />
+        ))}
+
+        {/* Gradient overlay */}
+        <div
+          className="absolute inset-0 z-10"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0.12) 100%)' }}
+        />
 
         {/* Quote */}
-        <div className="absolute bottom-10 left-10 right-10">
-          <motion.div
-            key={quoteIdx}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="text-4xl mb-3" style={{ color: '#F5B301', fontFamily: 'serif' }}>"</div>
-            <p className="text-white font-bold text-xl leading-snug mb-3 max-w-sm">
-              {QUOTES[quoteIdx].text}
-            </p>
-            <p className="text-accent font-semibold text-sm">— {QUOTES[quoteIdx].author}</p>
-          </motion.div>
+        <div className="absolute bottom-10 left-10 right-10 z-20">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={slideIdx}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.55, ease: 'easeOut' }}
+            >
+              <div className="text-5xl mb-2 leading-none" style={{ color: '#F5B301', fontFamily: 'serif' }}>&ldquo;</div>
+              <p className="text-white font-bold text-xl leading-snug mb-3 max-w-sm">
+                {SLIDES[slideIdx].text}
+              </p>
+              <p className="text-accent font-semibold text-sm">— {SLIDES[slideIdx].author}</p>
+            </motion.div>
+          </AnimatePresence>
 
-          {/* Dots */}
+          {/* Dot indicators */}
           <div className="flex gap-2 mt-6">
-            {QUOTES.map((_, i) => (
+            {SLIDES.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setQuoteIdx(i)}
+                onClick={() => setSlideIdx(i)}
                 className="rounded-full border-none cursor-pointer transition-all duration-300"
                 style={{
-                  width: i === quoteIdx ? 24 : 8,
+                  width: i === slideIdx ? 28 : 8,
                   height: 8,
-                  background: i === quoteIdx ? '#F5B301' : 'rgba(255,255,255,0.4)',
+                  background: i === slideIdx ? '#F5B301' : 'rgba(255,255,255,0.4)',
                 }}
               />
             ))}
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }
