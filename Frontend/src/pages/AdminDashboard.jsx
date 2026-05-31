@@ -26,8 +26,18 @@ import {
   ChevronDown,
   PlusCircle,
   UserCheck,
-  UserX
+  UserX,
+  Coffee,
+  ShoppingBag,
+  Pizza,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Eye,
+  Filter
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { adminService, authService } from '../services/api';
 import {
   IMG_HERO_BG,
@@ -39,6 +49,57 @@ import {
   IMG_PROMO_CARD,
   IMG_FOOD_ACCENT
 } from '../constants/images';
+
+const RESTAURANT_IMAGES = {
+  'The Green Bowl': IMG_REST_GREEN_BOWL,
+  'Spice Route': IMG_REST_SPICE_ROUTE,
+  'Ocean Delight': IMG_REST_OCEAN_DELIGHT,
+  'Pizza Point': IMG_REST_PIZZA_POINT,
+  'Burger House': IMG_REST_BURGER_HOUSE,
+};
+
+const TAB_META = {
+  dashboard: {
+    title: (name) => `👋 Welcome back, ${name}!`,
+    subtitle: "Here's what's happening on your platform today.",
+  },
+  approve: {
+    title: () => 'Approve Restaurant Submissions',
+    subtitle: 'Review and verify new restaurant registrations before they go live on the platform.',
+  },
+  users: {
+    title: () => 'All Restaurants & Users',
+    subtitle: 'Manage platform members, roles, and account access.',
+  },
+  reports: {
+    title: () => 'Platform Reports',
+    subtitle: 'Analytics, financial summaries, and audit exports.',
+  },
+  settings: {
+    title: () => 'System Settings',
+    subtitle: 'Configure platform permissions and operational flags.',
+  },
+};
+
+function getRestaurantImage(rest) {
+  if (rest.image && RESTAURANT_IMAGES[rest.name]) return RESTAURANT_IMAGES[rest.name];
+  return RESTAURANT_IMAGES[rest.name] || IMG_FOOD_ACCENT;
+}
+
+function formatSubmittedDate(dateStr) {
+  if (!dateStr) return 'Recently';
+  if (!dateStr.includes('T')) return dateStr;
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  if (diffHours < 1) return 'Just now';
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
 
 export default function AdminDashboard() {
   const { dark } = useTheme();
@@ -57,6 +118,12 @@ export default function AdminDashboard() {
   // Filter & Search states (Users tab)
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState('');
+
+  // Approve tab states
+  const [approveSearch, setApproveSearch] = useState('');
+  const [approveSort, setApproveSort] = useState('newest');
+  const [detailRest, setDetailRest] = useState(null);
+  const [approvalHistory, setApprovalHistory] = useState({ approvedThisWeek: 12, rejectedThisWeek: 3 });
 
   // UI state managers
   const [loading, setLoading] = useState(true);
@@ -125,6 +192,8 @@ export default function AdminDashboard() {
       await adminService.approveRestaurant(id, 'approved');
       addToast(`Restaurant "${name}" approved successfully!`);
       setPendingRestaurants(prev => prev.filter(r => r._id !== id));
+      setApprovalHistory(prev => ({ ...prev, approvedThisWeek: prev.approvedThisWeek + 1 }));
+      if (detailRest?._id === id) setDetailRest(null);
       const updatedStats = await adminService.getStats();
       const updatedLogs = await adminService.getRecentActivities();
       setStats(updatedStats);
@@ -146,6 +215,8 @@ export default function AdminDashboard() {
       await adminService.approveRestaurant(rejectingId, 'rejected', rejectionNotes);
       addToast(`Restaurant "${rest?.name}" rejected.`);
       setPendingRestaurants(prev => prev.filter(r => r._id !== rejectingId));
+      setApprovalHistory(prev => ({ ...prev, rejectedThisWeek: prev.rejectedThisWeek + 1 }));
+      if (detailRest?._id === rejectingId) setDetailRest(null);
       const updatedLogs = await adminService.getRecentActivities();
       setRecentActivities(updatedLogs);
       setRejectingId(null);
@@ -197,6 +268,26 @@ export default function AdminDashboard() {
     authService.logout();
     navigate('/login');
   };
+
+  const tabMeta = TAB_META[activeTab] || TAB_META.dashboard;
+  const displayName = currentUser?.name || 'Super Admin';
+
+  const filteredPendingRestaurants = [...pendingRestaurants]
+    .filter((rest) => {
+      if (!approveSearch.trim()) return true;
+      const term = approveSearch.toLowerCase();
+      return (
+        rest.name.toLowerCase().includes(term) ||
+        rest.cuisineType?.toLowerCase().includes(term) ||
+        rest.owner?.name?.toLowerCase().includes(term) ||
+        rest.owner?.email?.toLowerCase().includes(term)
+      );
+    })
+    .sort((a, b) => {
+      if (approveSort === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+      if (approveSort === 'name') return a.name.localeCompare(b.name);
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
   // ─── STYLING CALCULATIONS ───────────────────────────────────────
   const bg = dark ? '#070B14' : '#f8f5f0';
@@ -331,13 +422,20 @@ export default function AdminDashboard() {
           <div>
             <div className="flex items-center gap-4 flex-wrap">
               <h1 className="font-display font-black text-3xl lg:text-4xl tracking-tight leading-none">
-                👋 Welcome back, {currentUser?.name || 'Super Admin'}!
+                {tabMeta.title(displayName)}
               </h1>
-              <span className="text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full text-accent" style={{ background: 'rgba(245,179,1,0.08)', border: '1px solid rgba(245,179,1,0.3)', color: '#F5B301' }}>
-                SUPER ADMIN
-              </span>
+              {activeTab === 'dashboard' && (
+                <span className="text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full text-accent" style={{ background: 'rgba(245,179,1,0.08)', border: '1px solid rgba(245,179,1,0.3)', color: '#F5B301' }}>
+                  SUPER ADMIN
+                </span>
+              )}
+              {activeTab === 'approve' && pendingRestaurants.length > 0 && (
+                <span className="text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full animate-pulse" style={{ background: 'rgba(245,179,1,0.12)', border: '1px solid rgba(245,179,1,0.4)', color: '#F5B301' }}>
+                  {pendingRestaurants.length} PENDING
+                </span>
+              )}
             </div>
-            <p className="text-sm mt-3 font-semibold" style={{ color: textSub }}>Here's what's happening on your platform today.</p>
+            <p className="text-sm mt-3 font-semibold" style={{ color: textSub }}>{tabMeta.subtitle}</p>
           </div>
 
           <div className="flex items-center gap-6 flex-wrap">
@@ -348,7 +446,10 @@ export default function AdminDashboard() {
               </span>
               <input
                 type="text"
-                placeholder="Search for restaurants, users, order..."
+                placeholder={activeTab === 'approve' ? 'Search pending restaurants...' : 'Search for restaurants, users, order...'}
+                value={activeTab === 'approve' ? approveSearch : ''}
+                onChange={(e) => { if (activeTab === 'approve') setApproveSearch(e.target.value); }}
+                readOnly={activeTab !== 'approve'}
                 className="w-full text-xs rounded-full py-4 pl-12 pr-4 outline-none border transition-all duration-200"
                 style={{
                   background: inputBg,
@@ -472,7 +573,7 @@ export default function AdminDashboard() {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-transparent flex flex-col justify-center px-12 lg:px-20">
-                  <span className="inline-flex items-center gap-2 text-[10px] font-black tracking-widest uppercase text-accent mb-4 px-4.5 py-2 rounded-full bg-accent/20 border border-accent/40 w-fit" style={{ color: '#F5B301' }}>
+                  <span className="inline-flex items-center gap-2 text-[10px] font-black tracking-widest uppercase text-accent mb-4 px-6 py-3 rounded-full bg-accent/20 border border-accent/40 w-fit" style={{ color: '#F5B301' }}>
                     🍽 Premium Food Operations
                   </span>
                   <h2 className="text-white text-2xl lg:text-4xl font-black leading-tight max-w-lg tracking-tight">
@@ -514,7 +615,7 @@ export default function AdminDashboard() {
                         <div key={rest._id} className="flex items-center justify-between py-4 border-b" style={{ borderColor: borderCol }}>
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-2xl bg-accent/15 flex items-center justify-center text-base">
-                              🍔
+                              <Store size={20} color="#F5B301" />
                             </div>
                             <div>
                               <div className="font-black text-xs leading-snug">{rest.name}</div>
@@ -552,44 +653,32 @@ export default function AdminDashboard() {
                     </select>
                   </div>
 
-                  {/* SVG Area Chart */}
-                  <div className="flex-1 flex flex-col justify-end min-h-[180px] pt-4 relative">
-                    <svg viewBox="0 0 200 100" className="w-full h-full overflow-visible z-10">
-                      <defs>
-                        <linearGradient id="orderGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#F5B301" stopOpacity="0.45" />
-                          <stop offset="100%" stopColor="#F5B301" stopOpacity="0.0" />
-                        </linearGradient>
-                      </defs>
-                      <line x1="0" y1="20" x2="200" y2="20" stroke={borderCol} strokeWidth="0.5" strokeDasharray="3" />
-                      <line x1="0" y1="50" x2="200" y2="50" stroke={borderCol} strokeWidth="0.5" strokeDasharray="3" />
-                      <line x1="0" y1="80" x2="200" y2="80" stroke={borderCol} strokeWidth="0.5" strokeDasharray="3" />
-
-                      <path
-                        d="M 0 90 L 15 75 Q 30 50 45 68 T 75 40 T 105 85 T 135 30 T 165 24 T 200 65 L 200 90 Z"
-                        fill="url(#orderGrad)"
-                      />
-                      <path
-                        d="M 0 90 L 15 75 Q 30 50 45 68 T 75 40 T 105 85 T 135 30 T 165 24 T 200 65"
-                        fill="none"
-                        stroke="#F5B301"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                      />
-                      
-                      <circle cx="135" cy="30" r="4.5" fill="#F5B301" stroke={cardBg} strokeWidth="1.5" />
-                      <circle cx="165" cy="24" r="4.5" fill="#F5B301" stroke={cardBg} strokeWidth="1.5" />
-                    </svg>
-                    
-                    <div className="flex justify-between mt-5 text-[9px] font-black uppercase tracking-widest opacity-60" style={{ color: textSub }}>
-                      <span>Mon</span>
-                      <span>Tue</span>
-                      <span>Wed</span>
-                      <span>Thu</span>
-                      <span>Fri</span>
-                      <span>Sat</span>
-                      <span>Sun</span>
-                    </div>
+                  {/* Recharts Area Chart */}
+                  <div className="flex-1 flex flex-col justify-end min-h-[200px] pt-4 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart
+                        data={[
+                          { name: 'Mon', orders: 40 },
+                          { name: 'Tue', orders: 55 },
+                          { name: 'Wed', orders: 80 },
+                          { name: 'Thu', orders: 45 },
+                          { name: 'Fri', orders: 110 },
+                          { name: 'Sat', orders: 120 },
+                          { name: 'Sun', orders: 60 }
+                        ]}
+                        margin={{ top: 10, right: 0, left: 0, bottom: 0 }}
+                      >
+                        <defs>
+                          <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#F5B301" stopOpacity={0.5}/>
+                            <stop offset="95%" stopColor="#F5B301" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 900, fill: textSub }} dy={10} />
+                        <Tooltip contentStyle={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: '12px' }} itemStyle={{ color: '#F5B301' }} />
+                        <Area type="monotone" dataKey="orders" stroke="#F5B301" strokeWidth={3} fillOpacity={1} fill="url(#colorOrders)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
                   </div>
                 </div>
 
@@ -601,17 +690,34 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="flex-1 grid grid-cols-2 gap-8 items-center mt-6">
-                    <div className="relative flex items-center justify-center">
-                      <svg width="130" height="130" viewBox="0 0 36 36" className="w-[130px] h-[130px]">
-                        <circle cx="18" cy="18" r="15.91" fill="none" stroke={borderCol} strokeWidth="2.8" />
-                        <circle cx="18" cy="18" r="15.91" fill="none" stroke="#22c55e" strokeWidth="3"
-                          strokeDasharray="75 25" strokeDashoffset="25" />
-                        <circle cx="18" cy="18" r="15.91" fill="none" stroke="#F5B301" strokeWidth="3.2"
-                          strokeDasharray="15 85" strokeDashoffset="-50" />
-                        <circle cx="18" cy="18" r="15.91" fill="none" stroke="#ef4444" strokeWidth="3.2"
-                          strokeDasharray="10 90" strokeDashoffset="-65" />
-                      </svg>
-                      <div className="absolute text-center">
+                    <div className="relative flex items-center justify-center h-[130px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={[
+                              { name: 'Approved', value: 198, color: '#22c55e' },
+                              { name: 'Pending', value: 18, color: '#F5B301' },
+                              { name: 'Rejected', value: 29, color: '#ef4444' }
+                            ]}
+                            innerRadius="75%"
+                            outerRadius="100%"
+                            dataKey="value"
+                            stroke="none"
+                          >
+                            {
+                              [
+                                { name: 'Approved', value: 198, color: '#22c55e' },
+                                { name: 'Pending', value: 18, color: '#F5B301' },
+                                { name: 'Rejected', value: 29, color: '#ef4444' }
+                              ].map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))
+                            }
+                          </Pie>
+                          <Tooltip contentStyle={{ background: cardBg, border: `1px solid ${borderCol}`, borderRadius: '12px', fontSize: '12px' }} itemStyle={{ color: textTitle }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute text-center pointer-events-none">
                         <div className="text-2xl font-black leading-none">245</div>
                         <div className="text-[8px] font-black uppercase tracking-widest mt-1 opacity-65" style={{ color: textSub }}>Total</div>
                       </div>
@@ -693,7 +799,7 @@ export default function AdminDashboard() {
                         <p className="text-white/60 text-[10px] mb-4">Great taste, happy life</p>
                         <button
                           onClick={() => setActiveTab('approve')}
-                          className="px-4.5 py-2.5 rounded-full text-[9px] font-black border-none cursor-pointer hover:scale-105 transition-all shadow-md"
+                          className="px-6 py-3 rounded-full text-[9px] font-black border-none cursor-pointer hover:scale-105 transition-all shadow-md"
                           style={{ background: '#F5B301', color: '#000' }}
                         >
                           Explore Restaurants
@@ -711,8 +817,8 @@ export default function AdminDashboard() {
                       <div className="flex flex-col gap-4">
                         {recentActivities.slice(0, 4).map(act => (
                           <div key={act.id} className="flex items-start gap-4 text-xs py-1.5">
-                            <span className="text-[10px] mt-0.5 flex-shrink-0">
-                              {act.type === 'pending' ? '🔔' : act.type === 'approval' ? '✅' : act.type === 'rejection' ? '❌' : '⚙️'}
+                            <span className="mt-0.5 flex-shrink-0">
+                              {act.type === 'pending' ? <Bell size={14} className="text-blue-500" /> : act.type === 'approval' ? <CheckCircle2 size={14} className="text-green-500" /> : act.type === 'rejection' ? <XCircle size={14} className="text-red-500" /> : <Settings size={14} className="text-gray-500" />}
                             </span>
                             <div className="flex-1 leading-relaxed">
                               <span className="font-bold text-inherit">{act.text}</span>
@@ -738,14 +844,14 @@ export default function AdminDashboard() {
 
                     <div className="flex flex-col gap-4.5">
                       {[
-                        { name: 'Main Course', count: '1,245', icon: '🍲' },
-                        { name: 'Drinks', count: '876', icon: '🥤' },
-                        { name: 'Desserts', count: '432', icon: '🍰' },
-                        { name: 'Fast Food', count: '1,234', icon: '🍕' }
+                        { name: 'Main Course', count: '1,245', icon: <Utensils size={16} className="text-amber-500" /> },
+                        { name: 'Drinks', count: '876', icon: <Coffee size={16} className="text-amber-500" /> },
+                        { name: 'Desserts', count: '432', icon: <ShoppingBag size={16} className="text-amber-500" /> },
+                        { name: 'Fast Food', count: '1,234', icon: <Pizza size={16} className="text-amber-500" /> }
                       ].map(cat => (
                         <div key={cat.name} className="flex items-center justify-between text-xs py-3.5 border-b" style={{ borderColor: borderCol }}>
                           <div className="flex items-center gap-3 font-extrabold">
-                            <span>{cat.icon}</span>
+                            {cat.icon}
                             <span>{cat.name}</span>
                           </div>
                           <span className="font-black opacity-60" style={{ color: textSub }}>{cat.count}</span>
@@ -790,7 +896,7 @@ export default function AdminDashboard() {
             </motion.div>
           )}
 
-          {/* TAB 2: APPROVE RESTAURANTS VIEW (Spacious Card layouts: p-8 & gap-8) */}
+          {/* TAB 2: APPROVE RESTAURANTS VIEW */}
           {activeTab === 'approve' && (
             <motion.div
               key="approve-tab"
@@ -799,75 +905,173 @@ export default function AdminDashboard() {
               exit={{ opacity: 0, y: -15 }}
               className="flex flex-col gap-10"
             >
-              <div>
-                <h2 className="text-xl lg:text-2xl font-black tracking-tight leading-none">Approve Restaurant Submissions</h2>
-                <p className="text-sm mt-3" style={{ color: textSub }}>Verify credentials, address, and menu offerings from onboarded restaurant merchants.</p>
+              {/* Stats row */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                {[
+                  { label: 'Pending Review', value: pendingRestaurants.length, Icon: AlertCircle, color: '#F5B301', hint: 'Awaiting your decision' },
+                  { label: 'Approved This Week', value: approvalHistory.approvedThisWeek, Icon: CheckCircle2, color: '#22c55e', hint: 'Successfully onboarded' },
+                  { label: 'Rejected This Week', value: approvalHistory.rejectedThisWeek, Icon: XCircle, color: '#ef4444', hint: 'Did not meet criteria' },
+                ].map(({ label, value, Icon, color, hint }) => (
+                  <div
+                    key={label}
+                    className="rounded-3xl p-8 border flex items-center gap-6 shadow-sm"
+                    style={{ background: cardBg, borderColor: borderCol }}
+                  >
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}18`, border: `1px solid ${color}30` }}>
+                      <Icon size={24} color={color} />
+                    </div>
+                    <div>
+                      <div className="text-3xl font-black leading-none">{value}</div>
+                      <div className="text-xs font-black uppercase tracking-widest mt-2 opacity-70">{label}</div>
+                      <div className="text-[10px] mt-1" style={{ color: textSub }}>{hint}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filter toolbar */}
+              <div className="rounded-3xl p-6 border flex flex-col md:flex-row gap-5 items-center justify-between shadow-sm" style={{ background: cardBg, borderColor: borderCol }}>
+                <div className="flex items-center gap-3">
+                  <Filter size={16} style={{ color: textSub }} />
+                  <span className="text-xs font-bold" style={{ color: textSub }}>Sort by:</span>
+                  <select
+                    value={approveSort}
+                    onChange={(e) => setApproveSort(e.target.value)}
+                    className="text-xs font-bold rounded-xl px-4 py-3 outline-none border cursor-pointer"
+                    style={{ background: inputBg, borderColor: inputBorder, color: inputColor }}
+                  >
+                    <option value="newest">Newest first</option>
+                    <option value="oldest">Oldest first</option>
+                    <option value="name">Name (A–Z)</option>
+                  </select>
+                </div>
+                <p className="text-xs font-semibold" style={{ color: textSub }}>
+                  Showing {filteredPendingRestaurants.length} of {pendingRestaurants.length} submissions
+                </p>
               </div>
 
               {pendingRestaurants.length === 0 ? (
                 <div className="rounded-3xl p-20 border text-center flex flex-col items-center justify-center min-h-[400px]" style={{ background: cardBg, borderColor: borderCol }}>
-                  <span className="text-6xl mb-6">🎉</span>
-                  <h3 className="font-black text-lg mb-2">All Caught Up!</h3>
-                  <p className="text-xs max-w-sm leading-relaxed" style={{ color: textSub }}>There are no pending restaurant registration verification requests left at the moment.</p>
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6" style={{ background: 'rgba(34,197,94,0.12)' }}>
+                    <CheckCircle2 size={40} color="#22c55e" />
+                  </div>
+                  <h3 className="font-black text-xl mb-2">All Caught Up!</h3>
+                  <p className="text-sm max-w-md leading-relaxed" style={{ color: textSub }}>
+                    There are no pending restaurant registration requests. New submissions from owners will appear here for review.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className="mt-8 px-8 py-3.5 rounded-full font-bold text-xs border-none cursor-pointer hover:-translate-y-0.5 transition-all"
+                    style={{ background: '#F5B301', color: '#000' }}
+                  >
+                    Back to Dashboard
+                  </button>
+                </div>
+              ) : filteredPendingRestaurants.length === 0 ? (
+                <div className="rounded-3xl p-16 border text-center" style={{ background: cardBg, borderColor: borderCol }}>
+                  <Search size={32} className="mx-auto mb-4 opacity-40" />
+                  <h3 className="font-black text-base mb-2">No matches found</h3>
+                  <p className="text-xs" style={{ color: textSub }}>Try adjusting your search terms.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                   <AnimatePresence>
-                    {pendingRestaurants.map(rest => (
+                    {filteredPendingRestaurants.map((rest) => (
                       <motion.div
                         key={rest._id}
                         layout
                         initial={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20, transition: { duration: 0.3 } }}
-                        className="rounded-3xl border overflow-hidden shadow-md flex flex-col justify-between"
+                        className="rounded-3xl border overflow-hidden shadow-md flex flex-col"
                         style={{ background: cardBg, borderColor: borderCol }}
                       >
-                        <div>
-                          {/* visual banner */}
-                          <div className="h-44 relative bg-accent/20 flex items-center justify-center text-4xl">
-                            🍲
-                            <span className="absolute bottom-4 left-4 text-[10px] font-black uppercase text-black bg-white px-3.5 py-1 rounded-full tracking-wider shadow-sm">
-                              {rest.cuisineType.split(',')[0]}
-                            </span>
-                          </div>
-
-                          <div className="p-8">
-                            <h3 className="font-black text-lg truncate mb-2">{rest.name}</h3>
-                            <p className="text-xs line-clamp-3 leading-relaxed mb-6" style={{ color: textSub }}>{rest.description}</p>
-                            
-                            <div className="flex flex-col gap-4 border-t pt-6 text-xs" style={{ borderColor: borderCol }}>
-                              <div className="flex justify-between items-center">
-                                <span style={{ color: textSub }}>Owner Name:</span>
-                                <span className="font-extrabold">{rest.owner?.name}</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span style={{ color: textSub }}>Owner Email:</span>
-                                <span className="font-extrabold truncate max-w-[150px]">{rest.owner?.email}</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span style={{ color: textSub }}>Cuisine Focus:</span>
-                                <span className="font-extrabold text-accent">{rest.cuisineType}</span>
-                              </div>
-                            </div>
-                          </div>
+                        {/* Image banner */}
+                        <div className="h-48 relative overflow-hidden">
+                          <img
+                            src={getRestaurantImage(rest)}
+                            alt={rest.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <span
+                            className="absolute top-4 left-4 text-[9px] font-black uppercase px-3 py-1.5 rounded-full tracking-wider"
+                            style={{ background: 'rgba(245,179,1,0.95)', color: '#000' }}
+                          >
+                            Pending Review
+                          </span>
+                          <span className="absolute bottom-4 left-4 text-[10px] font-black uppercase text-white bg-black/50 backdrop-blur-md px-3 py-1 rounded-full tracking-wider">
+                            {rest.cuisineType?.split(',')[0]?.trim()}
+                          </span>
+                          <span className="absolute bottom-4 right-4 text-[10px] font-bold text-white/80 flex items-center gap-1">
+                            <Clock size={12} />
+                            {formatSubmittedDate(rest.createdAt)}
+                          </span>
                         </div>
 
-                        {/* Control buttons */}
-                        <div className="p-8 pt-0 border-t flex gap-4 mt-6" style={{ borderColor: borderCol, paddingTop: 24 }}>
-                          <button
-                            onClick={() => handleApprove(rest._id, rest.name)}
-                            className="flex-1 py-3.5 rounded-full font-bold text-xs border-none cursor-pointer hover:-translate-y-0.5 transition-all text-center"
-                            style={{ background: '#F5B301', color: '#000' }}
-                          >
-                            ✓ Approve
-                          </button>
-                          <button
-                            onClick={() => openRejectionModal(rest._id)}
-                            className="flex-1 py-3.5 rounded-full font-bold text-xs border bg-transparent cursor-pointer hover:bg-red-500/10 transition-all text-center text-red-500"
-                            style={{ borderColor: 'rgba(239,68,68,0.4)' }}
-                          >
-                            ✗ Reject
-                          </button>
+                        {/* Card body */}
+                        <div className="p-8 flex-1 flex flex-col">
+                          <h3 className="font-black text-lg leading-tight mb-2">{rest.name}</h3>
+                          <p className="text-xs line-clamp-2 leading-relaxed mb-5" style={{ color: textSub }}>
+                            {rest.description}
+                          </p>
+
+                          {/* Owner block */}
+                          <div className="rounded-2xl p-4 mb-5" style={{ background: dark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}>
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-[10px] uppercase" style={{ background: 'rgba(245,179,1,0.15)', color: '#F5B301' }}>
+                                {rest.owner?.name?.substring(0, 2) || 'OW'}
+                              </div>
+                              <div>
+                                <div className="text-[10px] font-black uppercase tracking-widest opacity-50">Owner</div>
+                                <div className="font-bold text-xs">{rest.owner?.name}</div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2 text-[11px]">
+                              <div className="flex items-center gap-2" style={{ color: textSub }}>
+                                <Mail size={12} className="flex-shrink-0" />
+                                <span className="truncate">{rest.owner?.email}</span>
+                              </div>
+                              {rest.address && (
+                                <div className="flex items-center gap-2" style={{ color: textSub }}>
+                                  <MapPin size={12} className="flex-shrink-0" />
+                                  <span className="truncate">{rest.address}</span>
+                                </div>
+                              )}
+                              {(rest.phone || rest.owner?.phone) && (
+                                <div className="flex items-center gap-2" style={{ color: textSub }}>
+                                  <Phone size={12} className="flex-shrink-0" />
+                                  <span>{rest.phone || rest.owner?.phone}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex flex-col gap-3 mt-auto">
+                            <button
+                              onClick={() => setDetailRest(rest)}
+                              className="w-full py-3 rounded-full font-bold text-xs border flex items-center justify-center gap-2 cursor-pointer hover:bg-opacity-10 transition-all"
+                              style={{ borderColor: borderCol, color: textTitle, background: 'transparent' }}
+                            >
+                              <Eye size={14} /> View Full Details
+                            </button>
+                            <div className="flex gap-3">
+                              <button
+                                onClick={() => handleApprove(rest._id, rest.name)}
+                                className="flex-1 py-3.5 rounded-full font-bold text-xs border-none cursor-pointer hover:-translate-y-0.5 transition-all flex items-center justify-center gap-1.5"
+                                style={{ background: '#F5B301', color: '#000' }}
+                              >
+                                <CheckCircle2 size={14} /> Approve
+                              </button>
+                              <button
+                                onClick={() => openRejectionModal(rest._id)}
+                                className="flex-1 py-3.5 rounded-full font-bold text-xs border bg-transparent cursor-pointer hover:bg-red-500/10 transition-all flex items-center justify-center gap-1.5 text-red-500"
+                                style={{ borderColor: 'rgba(239,68,68,0.4)' }}
+                              >
+                                <XCircle size={14} /> Reject
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       </motion.div>
                     ))}
@@ -1074,6 +1278,89 @@ export default function AdminDashboard() {
 
         </AnimatePresence>
       </main>
+
+      {/* ─── RESTAURANT DETAIL MODAL ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {detailRest && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDetailRest(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative rounded-3xl border w-full max-w-2xl shadow-2xl z-10 overflow-hidden max-h-[90vh] overflow-y-auto"
+              style={{ background: cardBg, borderColor: borderCol }}
+            >
+              <div className="h-52 relative">
+                <img src={getRestaurantImage(detailRest)} alt={detailRest.name} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                <button
+                  onClick={() => setDetailRest(null)}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center border-none cursor-pointer bg-black/50 text-white hover:bg-black/70 transition-all"
+                >
+                  <XCircle size={18} />
+                </button>
+                <div className="absolute bottom-5 left-6 right-6">
+                  <span className="text-[9px] font-black uppercase px-3 py-1 rounded-full tracking-wider" style={{ background: '#F5B301', color: '#000' }}>
+                    Pending Review
+                  </span>
+                  <h3 className="text-white font-black text-2xl mt-2">{detailRest.name}</h3>
+                  <p className="text-white/70 text-xs mt-1">{detailRest.cuisineType}</p>
+                </div>
+              </div>
+
+              <div className="p-8 flex flex-col gap-6">
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-widest opacity-50 mb-2">About</h4>
+                  <p className="text-sm leading-relaxed" style={{ color: textSub }}>{detailRest.description}</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[
+                    { label: 'Owner', value: detailRest.owner?.name, Icon: UserCheck },
+                    { label: 'Email', value: detailRest.owner?.email, Icon: Mail },
+                    { label: 'Phone', value: detailRest.phone || detailRest.owner?.phone, Icon: Phone },
+                    { label: 'Address', value: detailRest.address, Icon: MapPin },
+                    { label: 'Submitted', value: formatSubmittedDate(detailRest.createdAt), Icon: Clock },
+                    { label: 'Cuisine', value: detailRest.cuisineType, Icon: Utensils },
+                  ].filter((item) => item.value).map(({ label, value, Icon }) => (
+                    <div key={label} className="rounded-2xl p-4 border" style={{ borderColor: borderCol, background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Icon size={13} style={{ color: '#F5B301' }} />
+                        <span className="text-[10px] font-black uppercase tracking-widest opacity-50">{label}</span>
+                      </div>
+                      <div className="font-bold text-xs break-all">{value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-4 pt-2 border-t" style={{ borderColor: borderCol }}>
+                  <button
+                    onClick={() => handleApprove(detailRest._id, detailRest.name)}
+                    className="flex-1 py-4 rounded-full font-bold text-sm border-none cursor-pointer hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                    style={{ background: '#F5B301', color: '#000' }}
+                  >
+                    <CheckCircle2 size={16} /> Approve Restaurant
+                  </button>
+                  <button
+                    onClick={() => { setDetailRest(null); openRejectionModal(detailRest._id); }}
+                    className="flex-1 py-4 rounded-full font-bold text-sm border cursor-pointer hover:bg-red-500/10 transition-all flex items-center justify-center gap-2 text-red-500"
+                    style={{ borderColor: 'rgba(239,68,68,0.4)', background: 'transparent' }}
+                  >
+                    <XCircle size={16} /> Reject
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ─── REJECTION MODAL OVERLAY ─────────────────────────────────────── */}
       <AnimatePresence>
