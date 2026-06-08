@@ -40,19 +40,19 @@ import {
 // LOGO
 // ─────────────────────────────────────────────
 export function Logo({ size = 'md', onClick }) {
-  const sizeMap = { sm: 32, md: 40, lg: 52 };
-  const px = sizeMap[size] || 40;
+  const sizeMap = { sm: 48, md: 72, lg: 96 };
+  const px = sizeMap[size] || 72;
 
   return (
     <div
       onClick={onClick}
-      className="flex items-center gap-2.5 cursor-pointer select-none"
+      className="flex items-center gap-3 cursor-pointer select-none"
     >
       {IMG_LOGO ? (
         <img
           src={IMG_LOGO}
           alt="Delicious Food Logo"
-          style={{ width: px, height: px * 0.7, objectFit: 'contain' }}
+          style={{ height: px, width: 'auto', maxWidth: px * 2, objectFit: 'contain' }}
         />
       ) : (
         /* Fallback: Lucide icon instead of emoji */
