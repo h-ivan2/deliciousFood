@@ -99,14 +99,14 @@ export default function Login() {
           <ThemeToggle />
         </div>
 
-        {/* Heading */}
+        
         <div className="mb-6 flex flex-col items-start">
           <h1 className="font-display font-black text-3xl mb-1.5">
             Welcome back 👋
           </h1>
         </div>
 
-        {/* Form fields */}
+        
         <form
           className="flex flex-col gap-5"
           onSubmit={async (e) => {
@@ -123,18 +123,21 @@ export default function Login() {
               if (res.success) {
                 if (res.user.role === 'admin') {
                   navigate('/admin');
+                } else if (res.user.role === 'owner') {
+                  navigate('/owner');
                 } else {
-                  setErrorMsg('Access denied. Currently only Super Admin dashboard is built!');
+                  navigate('/'); 
                 }
               }
-            } catch (err) {
+            } catch (err) { 
               setErrorMsg(err.message);
             } finally {
               setLoading(false);
             }
           }}
         >
-          {/* Email */}
+
+     
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: labelColor }}>
               Email or Phone number
