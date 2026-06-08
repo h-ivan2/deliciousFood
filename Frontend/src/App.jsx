@@ -1,22 +1,93 @@
-import{BrowserRouter,Routes,Route} from 'react-router-dom';
-import{ThemeProvider} from './context/ThemeContext';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
+import { CartProvider } from './context/CartContext';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
-import Signup  from './pages/Signup';
-import AdminDashboard from './pages/AdminDashboard';
+import Signup from './pages/Signup';
+import RegisterRestaurant from './pages/RegisterRestaurant';
 
+import CustomerLayout from './components/customer/CustomerLayout';
+import Explore from './pages/customer/Explore';
+import BrowseRestaurants from './pages/customer/BrowseRestaurants';
+import CheckoutPage from './pages/customer/CheckoutPage';
+import UserDashboard from './pages/customer/UserDashboard';
+import TableReservation from './pages/customer/TableReservation';
+import RestaurantMenu from './pages/customer/RestaurantMenu';
+import OrdersPage from './pages/customer/OrdersPage';
+import ReservationsPage from './pages/customer/ReservationsPage';
+import CustomerPlaceholder from './pages/customer/CustomerPlaceholder';
 
-export default function App(){
-  return(
+import AdminLayout from './components/admin/AdminLayout';
+import AdminDashboardHome from './pages/admin/AdminDashboardHome';
+import AdminApproveRestaurants from './pages/admin/AdminApproveRestaurants';
+import AdminAllRestaurants from './pages/admin/AdminAllRestaurants';
+import AdminRestaurantApprovalDetail from './pages/admin/AdminRestaurantApprovalDetail';
+import AdminEditRestaurant from './pages/admin/AdminEditRestaurant';
+import AdminPlaceholder from './pages/admin/AdminPlaceholder';
+
+import OwnerLayout from './components/owner/OwnerLayout';
+import OwnerDashboardHome from './pages/owner/OwnerDashboardHome';
+import OwnerOrdersPage from './pages/owner/OwnerOrdersPage';
+import OwnerMenuPage from './pages/owner/OwnerMenuPage';
+import OwnerCustomersPage from './pages/owner/OwnerCustomersPage';
+import OwnerReportsPage from './pages/owner/OwnerReportsPage';
+
+export default function App() {
+  return (
     <ThemeProvider>
-      <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<LandingPage/>}/>
-        <Route path='/Login' element={<Login/>}/>
-        <Route path='/Signup' element={<Signup/>}/>
-        <Route path='/admin' element={<AdminDashboard/>}/>
-      </Routes>
-      </BrowserRouter>
+      <CartProvider>
+        <BrowserRouter>
+          <Routes>
+          
+            <Route path="/"                    element={<LandingPage />} />
+            <Route path="/login"               element={<Login />} />
+            <Route path="/signup"              element={<Signup />} />
+            <Route path="/register-restaurant" element={<RegisterRestaurant />} />
+
+         
+            <Route element={<CustomerLayout />}>
+              <Route path="/explore"                    element={<Explore />} />
+              <Route path="/browse"                     element={<BrowseRestaurants />} />
+              <Route path="/restaurant/:id/menu"        element={<RestaurantMenu />} />
+              <Route path="/restaurant/:id/reserve"     element={<TableReservation />} />
+              <Route path="/checkout"                   element={<CheckoutPage />} />
+              <Route path="/orders"                     element={<OrdersPage />} />
+              <Route path="/reservations"               element={<ReservationsPage />} />
+              <Route path="/dashboard"                  element={<UserDashboard />} />
+              <Route path="/profile"                    element={<CustomerPlaceholder title="Profile" subtitle="Manage your personal information and preferences" />} />
+              <Route path="/favorites"                  element={<CustomerPlaceholder title="My Favorites" subtitle="Your saved restaurants and dishes" />} />
+              <Route path="/offers"                     element={<CustomerPlaceholder title="Special Offers" subtitle="Exclusive deals and promotions just for you" />} />
+              <Route path="/settings"                   element={<CustomerPlaceholder title="Settings" subtitle="Customize your app experience" />} />
+            </Route>
+
+          
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index                              element={<AdminDashboardHome />} />
+              <Route path="approve"                     element={<AdminApproveRestaurants />} />
+              <Route path="approve/:id"                 element={<AdminRestaurantApprovalDetail />} />
+              <Route path="restaurants"                 element={<AdminAllRestaurants />} />
+              <Route path="restaurants/:id/edit"        element={<AdminEditRestaurant />} />
+              <Route path="reports"                     element={<AdminPlaceholder title="Reports" subtitle="Platform analytics and exports" />} />
+              <Route path="settings"                    element={<AdminPlaceholder title="Settings" subtitle="System configuration" />} />
+            </Route>
+
+        
+            <Route path="/owner" element={<OwnerLayout />}>
+              <Route index                              element={<OwnerDashboardHome />} />
+              <Route path="orders"                      element={<OwnerOrdersPage />} />
+              <Route path="menu"                        element={<OwnerMenuPage />} />
+              <Route path="customers"                   element={<OwnerCustomersPage />} />
+              <Route path="reports"                     element={<OwnerReportsPage />} />
+              <Route path="settings"                    element={<AdminPlaceholder title="Settings" subtitle="Update restaurant details and preferences" />} />
+            </Route>
+
+          
+            <Route path="/Login"     element={<Navigate to="/login"  replace />} />
+            <Route path="/Signup"    element={<Navigate to="/signup" replace />} />
+            <Route path="/admin-old" element={<Navigate to="/admin"  replace />} />
+          </Routes>
+        </BrowserRouter>
+      </CartProvider>
     </ThemeProvider>
   );
 }
