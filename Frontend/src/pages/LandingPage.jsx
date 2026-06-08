@@ -10,8 +10,6 @@ import {
   ClipboardList,
   MapPin,
   BarChart3,
-  Play,
-  ArrowRight,
   Star,
   Quote,
   Store,
@@ -20,6 +18,9 @@ import {
   ChefHat,
   Bike,
   Leaf,
+  UserPlus,
+  Store as StoreIcon,
+  ArrowRight,
 } from 'lucide-react';
 
 import { useTheme } from '../context/ThemeContext';
@@ -405,7 +406,6 @@ export default function LandingPage() {
       >
         {/* background */}
         <div className="absolute inset-0 z-0">
-          {/* REPLACE: IMG_HERO_BG — set your cinematic food photo in constants/images.js */}
           <img
             src={IMG_HERO_BG}
             alt=""
@@ -480,25 +480,36 @@ export default function LandingPage() {
                 ))}
               </motion.div>
 
-              {/* CTA buttons */}
-              <motion.div {...fadeUp(0.35)} className="flex flex-wrap gap-3 mb-12">
+              {/* CTA buttons — Two role-based buttons */}
+              <motion.div {...fadeUp(0.35)} className="flex flex-wrap gap-4 mb-12">
                 <BtnPrimary
-                  onClick={() => navigate('/signup')}
-                  style={{ fontSize: 15, padding: '13px 28px', borderRadius: 12 }}
+                  onClick={() => navigate('/signup?role=owner')}
+                  style={{
+                    fontSize: 15,
+                    padding: '14px 28px',
+                    borderRadius: 12,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
                 >
-                  Get Started Now
+                  <StoreIcon size={18} />
+                  Join as Restaurant Owner
                 </BtnPrimary>
                 <BtnOutline
                   dark={dark}
-                  style={{ fontSize: 15, padding: '13px 24px', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8 }}
+                  onClick={() => navigate('/signup?role=customer')}
+                  style={{
+                    fontSize: 15,
+                    padding: '14px 28px',
+                    borderRadius: 12,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
                 >
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: 'rgba(255,255,255,0.12)' }}
-                  >
-                    <Play size={12} fill="currentColor" />
-                  </div>
-                  Watch demo
+                  <UserPlus size={18} />
+                  Join as Customer
                 </BtnOutline>
               </motion.div>
 
@@ -532,7 +543,6 @@ export default function LandingPage() {
               />
 
               {/* food background image top-right */}
-              {/* REPLACE: swap this div with your actual burger/food hero photo */}
               <div
                 className="absolute -top-10 -right-10 w-[55%] h-[55%] rounded-2xl overflow-hidden"
                 style={{ zIndex: 0, opacity: 0.85 }}
@@ -566,7 +576,7 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════════
-          3 TABLETS SECTION  (matches your Figma design)
+          3 TABLETS SECTION
       ════════════════════════════════════════════════════ */}
       <section className="py-20 overflow-hidden" style={{ background: bg }}>
         <div className="max-w-[1280px] mx-auto px-6">
@@ -576,7 +586,7 @@ export default function LandingPage() {
             className="relative flex items-end justify-center"
             style={{ gap: 0, minHeight: 340 }}
           >
-            {/* LEFT tablet — Restaurant Owner Menu Mgmt (tilted left, smaller) */}
+            {/* LEFT tablet — Restaurant Owner Menu Mgmt */}
             <motion.div
               initial={{ opacity: 0, x: -60, rotate: -4 }}
               whileInView={{ opacity: 1, x: 0, rotate: -4 }}
@@ -589,7 +599,7 @@ export default function LandingPage() {
               </TabletFrame>
             </motion.div>
 
-            {/* CENTER tablet — Customer Explore (straight, largest, in front) */}
+            {/* CENTER tablet — Customer Explore */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -602,7 +612,7 @@ export default function LandingPage() {
               </TabletFrame>
             </motion.div>
 
-            {/* RIGHT tablet — Customer Track Order (tilted right, smaller) */}
+            {/* RIGHT tablet — Customer Track Order */}
             <motion.div
               initial={{ opacity: 0, x: 60, rotate: 4 }}
               whileInView={{ opacity: 1, x: 0, rotate: 4 }}
@@ -619,7 +629,7 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════════
-          BOTTOM FEATURES BAR  (4-column row in Figma)
+          BOTTOM FEATURES BAR
       ════════════════════════════════════════════════════ */}
       <section className="py-14" style={{ background: sectionAlt }}>
         <div className="max-w-[1280px] mx-auto px-6">
@@ -645,7 +655,6 @@ export default function LandingPage() {
                     : 'none',
                 }}
               >
-                {/* icon circle */}
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
                   style={{ background: 'rgba(245,179,1,0.12)', border: '1px solid rgba(245,179,1,0.2)' }}
@@ -834,10 +843,11 @@ export default function LandingPage() {
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <BtnPrimary
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate('/signup?role=owner')}
                 style={{ fontSize: 16, padding: '16px 40px', display: 'inline-flex', alignItems: 'center', gap: 8 }}
               >
-                Start for Free <ArrowRight size={16} />
+                <StoreIcon size={18} />
+                Join as Owner <ArrowRight size={16} />
               </BtnPrimary>
               <BtnOutline
                 dark={dark}
