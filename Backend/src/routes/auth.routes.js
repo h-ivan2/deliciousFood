@@ -91,6 +91,7 @@ router.post('/login', authCtrl.login);
  *         description: Not authenticated
  */
 router.get('/me', protect, authCtrl.getMe);
+router.put('/me', protect, authCtrl.updateMe);
 router.post('/forgot-password', authCtrl.forgotPassword);
 router.post('/reset-password/:token', authCtrl.resetPassword);
 router.put('/update-password', protect, authCtrl.updatePassword);
