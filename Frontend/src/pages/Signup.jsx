@@ -42,6 +42,7 @@ export default function Signup() {
   const [slideIdx, setSlideIdx] = useState(0);
   const [error, setError] = useState('');
 
+  const isOwner = role === 'owner';
   const slides = isOwner ? OWNER_SLIDES : CUSTOMER_SLIDES;
 
   useEffect(() => {
@@ -57,8 +58,6 @@ export default function Signup() {
   const inputColor = dark ? '#fff' : '#1a1a1a';
   const labelColor = dark ? 'rgba(255,255,255,0.75)' : '#333';
   const subColor = dark ? 'rgba(255,255,255,0.45)' : '#888';
-
-  const isOwner = role === 'owner';
 
   const handleSignup = async (e) => {
     e.preventDefault();

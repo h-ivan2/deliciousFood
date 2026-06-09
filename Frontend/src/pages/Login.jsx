@@ -126,7 +126,7 @@ export default function Login() {
                 } else if (res.user.role === 'owner') {
                   navigate('/owner');
                 } else {
-                  navigate('/'); 
+                  navigate('/explore');
                 }
               }
             } catch (err) { 

@@ -96,14 +96,21 @@ export default function AdminDashboardHome() {
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [sData, pData, aData] = await Promise.all([
+      const [sData, pData] = await Promise.all([
         adminService.getStats(),
         adminService.getPendingRestaurants(),
-        adminService.getRecentActivities(),
       ]);
       setStats(sData);
       setPendingRestaurants(pData);
-      setRecentActivities(aData);
+      // Derive a lightweight activity feed from the pending queue
+      setRecentActivities(
+        (pData || []).slice(0, 4).map((r) => ({
+          id: r._id,
+          type: 'pending',
+          text: `New restaurant "${r.name}" is pending approval`,
+          time: 'Recently',
+        }))
+      );
     } catch {
       addToast('Error loading data', 'error');
     } finally {

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ownerService, authService } from '../services/api';
 import {
   Store,
   UtensilsCrossed,
@@ -129,22 +130,57 @@ export default function RegisterRestaurant() {
   const nextStep = () => setStep(prev => Math.min(prev + 1, 4));
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-  const handleComplete = () => {
-    setCompleted(true);
-    // Simulate saving restaurant data to localStorage
-    const restaurantData = {
-      ...form,
-      description,
-      operatingHours,
-      deliveryFee,
-      deliveryTime,
-      menuCategories,
-      _id: `rest_${Date.now()}`,
-      status: 'pending',
-      createdAt: new Date().toISOString()
-    };
-    localStorage.setItem('df_my_restaurant', JSON.stringify(restaurantData));
-    setTimeout(() => navigate('/owner'), 1200);
+  const [submitError, setSubmitError] = useState('');
+
+  const handleComplete = async () => {
+    // Must be a logged-in owner to register a restaurant
+    const user = authService.getCurrentUser();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setSubmitError('');
+    try {
+      // Split the single address field into the backend's structured shape
+      const [street, city] = (form.address || '').split(',').map((s) => s.trim());
+
+      const created = await ownerService.createRestaurant({
+        name: form.name,
+        description,
+        cuisine: form.cuisine ? [form.cuisine] : [],
+        phone: form.phone,
+        email: form.email,
+        address: { street: street || form.address, city: city || 'Kigali' },
+        deliveryFee: parseFloat(deliveryFee) || 0,
+        estimatedDeliveryTime: parseInt(deliveryTime, 10) || 30,
+      });
+
+      // Create the menu categories + items the owner set up in step 3
+      for (const cat of menuCategories) {
+        if (!cat.name) continue;
+        try {
+          const newCat = await ownerService.createCategory({ restaurant: created._id, name: cat.name });
+          for (const item of cat.items || []) {
+            if (!item.name || !item.price) continue;
+            await ownerService.createItem({
+              restaurant: created._id,
+              category: newCat._id,
+              name: item.name,
+              price: parseFloat(item.price) || 0,
+              description: item.description || '',
+            });
+          }
+        } catch {
+          // skip a failed category but keep going
+        }
+      }
+
+      setCompleted(true);
+      setTimeout(() => navigate('/owner'), 1200);
+    } catch (err) {
+      setSubmitError(err.message || 'Failed to register restaurant. Please try again.');
+    }
   };
 
   const isStepValid = () => {
@@ -608,6 +644,11 @@ export default function RegisterRestaurant() {
                       </div>
                     </div>
 
+                    {submitError && (
+                      <div className="mb-4 text-xs font-bold text-red-400 bg-red-500/10 rounded-xl px-4 py-3">
+                        {submitError}
+                      </div>
+                    )}
                     <button
                       onClick={handleComplete}
                       className="w-full py-4 bg-[#F5B301] text-black font-black rounded-full text-lg hover:bg-[#d99a00] transition-all cursor-pointer border-none shadow-lg"
