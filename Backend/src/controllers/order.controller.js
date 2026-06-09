@@ -246,3 +246,99 @@ exports.getRestaurantOrders = async (req, res, next) => {
     next(err);
   }
 };
+
+// @desc    Owner dashboard stats for a restaurant
+// @route   GET /api/v1/orders/restaurant/:restaurantId/stats
+// @access  Private (owner, admin)
+exports.getRestaurantStats = async (req, res, next) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.restaurantId);
+    if (!restaurant) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Restaurant not found" });
+    }
+    if (
+      restaurant.owner.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorised" });
+    }
+
+    const restId = restaurant._id;
+    const [totalOrders, pendingOrders, revenueAgg, customers] = await Promise.all([
+      Order.countDocuments({ restaurant: restId }),
+      Order.countDocuments({ restaurant: restId, status: { $in: ["pending", "confirmed", "preparing"] } }),
+      Order.aggregate([
+        { $match: { restaurant: restId, status: "delivered" } },
+        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+      ]),
+      Order.distinct("customer", { restaurant: restId }),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalOrders,
+        pendingOrders,
+        totalRevenue: revenueAgg[0]?.total || 0,
+        totalCustomers: customers.length,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// @desc    Customers who ordered from a restaurant (aggregated)
+// @route   GET /api/v1/orders/restaurant/:restaurantId/customers
+// @access  Private (owner, admin)
+exports.getRestaurantCustomers = async (req, res, next) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.restaurantId);
+    if (!restaurant) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Restaurant not found" });
+    }
+    if (
+      restaurant.owner.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorised" });
+    }
+
+    const orders = await Order.find({ restaurant: restaurant._id })
+      .populate("customer", "name email phone")
+      .sort("-createdAt");
+
+    // Aggregate per-customer totals
+    const map = new Map();
+    orders.forEach((o) => {
+      if (!o.customer) return;
+      const id = o.customer._id.toString();
+      const existing = map.get(id) || {
+        _id: id,
+        name: o.customer.name,
+        email: o.customer.email,
+        phone: o.customer.phone,
+        totalOrders: 0,
+        totalSpent: 0,
+        lastOrder: o.createdAt,
+      };
+      existing.totalOrders += 1;
+      existing.totalSpent += o.totalAmount || 0;
+      if (o.createdAt > existing.lastOrder) existing.lastOrder = o.createdAt;
+      map.set(id, existing);
+    });
+
+    const data = Array.from(map.values());
+    res.status(200).json({ success: true, count: data.length, data });
+  } catch (err) {
+    next(err);
+  }
+};

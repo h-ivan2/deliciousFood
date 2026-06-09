@@ -150,6 +150,27 @@ exports.resetPassword = async (req, res, next) => {
   }
 };
 
+// ── PUT /api/v1/auth/me  (update own profile) ────────────────────────────────
+exports.updateMe = async (req, res, next) => {
+  try {
+    // Whitelist the fields a user is allowed to change about themselves
+    const allowed = ["name", "phone", "avatar"];
+    const updates = {};
+    allowed.forEach((f) => {
+      if (req.body[f] !== undefined) updates[f] = req.body[f];
+    });
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({ success: true, data: user });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.updatePassword = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id).select("+password");

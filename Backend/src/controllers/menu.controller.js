@@ -122,8 +122,10 @@ exports.createItem = async (req, res, next) => {
 
 exports.getItems = async (req, res, next) => {
   try {
-    const { category, search, isVegetarian, minPrice, maxPrice } = req.query;
-    const filter = { restaurant: req.params.restaurantId, isAvailable: true };
+    const { category, search, isVegetarian, minPrice, maxPrice, all } = req.query;
+    const filter = { restaurant: req.params.restaurantId };
+    // Customers only see available items; owners (all=true) see everything
+    if (all !== "true") filter.isAvailable = true;
 
     if (category) filter.category = category;
     if (search) filter.$text = { $search: search };
