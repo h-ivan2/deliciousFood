@@ -4,18 +4,17 @@ const jwt    = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
     name: {
-        type:String,
-        required : [true, 'Name is requuired'],
+        type: String,
+        required: [true, 'Name is required'],
         trim: true,
     },
     email: {
-        type:String,
+        type: String,
         required: [true, 'Email is required'],
+        unique: true, // Recommended: prevents duplicate email registrations
         trim: true,
         lowercase: true,
-        trim: true,
     },
-
     password: {
         type: String,
         required: true,
@@ -24,55 +23,58 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['customer','owner','admin'],
+        enum: ['customer', 'owner', 'admin'],
         default: 'customer',
     },
-    phone : {
+    phone: {
         type: String,
         trim: true,
     },
-     avatar: {
+    avatar: {
         public_id: String,
-        url :      String,
-     },
-     isActive: {
+        url:       String,
+    },
+    isActive: {
         type: Boolean,
         default: true,
-     },
-     resetPasswordToken: String,
-     resetPasswordExpire: Date,
-}, {timestamps: true});
+    },
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
+}, { timestamps: true });
 
-userSchema.pre('save',async function (next) {
-    if(!this.isModified('password')) return next();
-    this.password = await bcrypt.hash(this.password,12);
-        next();
-    });
+// ─── FIXED PRE-SAVE HOOK (Removed callback 'next' parameters) ───────
+userSchema.pre('save', async function () {
+    // If the password hasn't been modified, just exit the function early
+    if (!this.isModified('password')) return;
+
+    // Hash the modified password cleanly using async/await syntax
+    this.password = await bcrypt.hash(this.password, 12);
+});
 
 userSchema.methods.comparePassword = async function (candidate) {
-    return bcrypt.compare(candidate,this.password);  
+    return bcrypt.compare(candidate, this.password);  
 };
 
 userSchema.methods.getSignedToken = function(){
     return jwt.sign(
-        { id: this._id,role: this.role },
+        { id: this._id, role: this.role },
         process.env.JWT_SECRET,
-        {expiresIn: process.env.JWT_EXPIRE || '30d'}
+        { expiresIn: process.env.JWT_EXPIRE || '30d' }
     );
 };
 
-userSchema.methods.getResetPasswordToken= function(){
+userSchema.methods.getResetPasswordToken = function(){
     const crypto = require('crypto');
-    const resetToken= crypto.randomBytes(20).toString('hex');
+    const resetToken = crypto.randomBytes(20).toString('hex');
 
-    this.resetPasswordToken=crypto
+    this.resetPasswordToken = crypto
       .createHash('sha256')
       .update(resetToken)
       .digest('hex');
 
-    this.resetPasswordExpire = Date.now() + 10*60*1000;
+    this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
 
     return resetToken;
-}
+};
 
-module.exports = mongoose.model('User',userSchema)
+module.exports = mongoose.model('User', userSchema);

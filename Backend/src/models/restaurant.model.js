@@ -19,6 +19,11 @@ const restaurantSchema = new mongoose.Schema({
 
     },
     cuisine: [{ type: String, trim: true}],
+    restaurantType: {
+        type: String,
+        trim: true,
+        default: 'Restaurant',
+    },
     address: {
         street: {type: String, required: true},
         city: {type: String, required: true},
@@ -27,7 +32,9 @@ const restaurantSchema = new mongoose.Schema({
         Country: {type: String, default:'Rwanda'},
     },
     phone: String,
+    altPhone: String,
     email: String,
+    website: String,
     logo :{
         public_id: String,
         url:    String,
@@ -36,6 +43,26 @@ const restaurantSchema = new mongoose.Schema({
         public_id: String,
         url:  String,
     },
+    gallery: [{
+        public_id: String,
+        url: String,
+    }],
+    seatingCapacity: {
+        type: Number,
+        default: 0,
+    },
+    establishedYear: {
+        type: Number,
+    },
+    // Services offered, e.g. ['delivery','dinein']
+    services: [{ type: String, trim: true }],
+    // Opening hours per day
+    openingHours: [{
+        day: String,
+        open: String,
+        close: String,
+        closed: { type: Boolean, default: false },
+    }],
     status: {
         type: String,
         enum: ['pending','approved','rejected','suspended'],
