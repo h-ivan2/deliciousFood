@@ -16,6 +16,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { customerService, authService } from '../../services/api';
 
 const VALID_PROMOS = {
   WELCOME20: { discount: 0.20, label: '20% OFF First Order' },
@@ -43,6 +44,7 @@ export default function CheckoutPage() {
   const [promoApplied, setPromoApplied] = useState(null); // { type: string, discount: number, freeDelivery: bool }
   const [promoError, setPromoError] = useState('');
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [orderError, setOrderError] = useState('');
 
   const subtotal = getSubtotal();
   const deliveryFee = promoApplied?.freeDelivery ? 0 : getDeliveryFee();
@@ -70,15 +72,41 @@ export default function CheckoutPage() {
     setPromoError('');
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return;
+
+    // Must be logged in to place an order
+    const user = authService.getCurrentUser();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setOrderError('');
     setIsPlacingOrder(true);
-    // Simulate order placement
-    setTimeout(() => {
-      setIsPlacingOrder(false);
+    try {
+      const orderItems = cartItems.map((item) => ({
+        menuItem: item._id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      }));
+
+      await customerService.placeOrder({
+        restaurant: cartRestaurant?._id,
+        items: orderItems,
+        orderType: 'delivery',
+        paymentMethod: 'cash',
+        promoCode: promoApplied ? promoCode : undefined,
+      });
+
       clearCart();
       navigate('/orders');
-    }, 1500);
+    } catch (err) {
+      setOrderError(err.message || 'Failed to place order. Please try again.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   const getItemImage = (item) => {
@@ -342,6 +370,12 @@ export default function CheckoutPage() {
                   <span className="text-xl font-black text-amber-500">${total.toFixed(2)}</span>
                 </div>
               </div>
+
+              {orderError && (
+                <div className="mb-4 text-xs font-bold text-red-500 bg-red-500/10 rounded-xl px-4 py-3">
+                  {orderError}
+                </div>
+              )}
 
               {/* Place Order Button */}
               <button

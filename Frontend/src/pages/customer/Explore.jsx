@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useCart } from '../../context/CartContext';
-import { customerService } from '../../services/api';
+import { customerService, authService } from '../../services/api';
 
 const CUISINES = [
   { name: 'Pizza', count: '32 Restaurants', icon: Pizza },
@@ -36,6 +36,8 @@ export default function Explore() {
   const [featuredRestaurants, setFeaturedRestaurants] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const currentUser = authService.getCurrentUser();
+  const firstName = currentUser?.name?.split(' ')[0] || 'there';
 
   useEffect(() => {
     async function loadData() {
@@ -45,16 +47,7 @@ export default function Explore() {
         setFeaturedRestaurants(list.slice(4, 8).concat(list.slice(0, 2)));
 
         const orders = await customerService.getMyOrders();
-        if (orders.length === 0) {
-          setRecentOrders([
-            { _id: 'ord_m1', restaurant: { name: 'The Green Bowl' }, createdAt: '2026-05-17T12:00:00.000Z', totalAmount: 24.99, status: 'delivered' },
-            { _id: 'ord_m2', restaurant: { name: 'The Green Bowl' }, createdAt: '2026-05-17T10:15:00.000Z', totalAmount: 24.99, status: 'delivered' },
-            { _id: 'ord_m3', restaurant: { name: 'The Green Bowl' }, createdAt: '2026-05-16T19:30:00.000Z', totalAmount: 24.99, status: 'delivered' },
-            { _id: 'ord_m4', restaurant: { name: 'The Green Bowl' }, createdAt: '2026-05-15T13:45:00.000Z', totalAmount: 24.99, status: 'delivered' },
-          ]);
-        } else {
-          setRecentOrders(orders.slice(0, 5));
-        }
+        setRecentOrders((orders || []).slice(0, 5));
       } catch (err) {
         console.error(err);
       } finally {
@@ -85,7 +78,7 @@ export default function Explore() {
         {/* ─── HERO WELCOME ─── */}
         <div className="mb-8">
           <h1 className="font-display font-black text-2xl lg:text-3xl leading-none" style={{ color: textColor }}>
-            Good Morning, John 👋
+            Welcome back, {firstName} 👋
           </h1>
           <p className="text-[12px] font-bold mt-1" style={{ color: textMuted }}>
             Discover delicious food from the best restaurants near you

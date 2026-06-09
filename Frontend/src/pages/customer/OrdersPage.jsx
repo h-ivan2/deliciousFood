@@ -35,8 +35,9 @@ export default function OrdersPage() {
     const user = authService.getCurrentUser();
     if (!user) return;
 
-    // Connect to Express Socket.IO server
-    const socket = io('http://localhost:5000');
+    // Connect to Express Socket.IO server (strip the /api/v1 suffix from the API URL)
+    const SOCKET_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1').replace(/\/api\/v1\/?$/, '');
+    const socket = io(SOCKET_URL);
 
     socket.on('connect', () => {
       console.log('🔌 Customer socket connected:', socket.id);

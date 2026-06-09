@@ -21,15 +21,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useCart } from '../../context/CartContext';
-
-const MOCK_RECENT_ACTIVITY = [
-  { id: 'act1', type: 'order', label: 'Order delivered', detail: 'The Green Bowl • $24.99', time: 'Today, 12:30 PM', icon: ShoppingBag, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { id: 'act2', type: 'reservation', label: 'Table reservation', detail: 'Pizza Point • Mar 15, 7:00 PM', time: 'Yesterday', icon: Calendar, color: 'text-amber-600', bg: 'bg-amber-50' },
-  { id: 'act3', type: 'order', label: 'Order delivered', detail: 'Burger House • $14.99', time: 'Mar 13, 8:15 PM', icon: ShoppingBag, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { id: 'act4', type: 'wallet', label: 'Wallet top-up', detail: '+$50.00 added to wallet', time: 'Mar 12, 10:00 AM', icon: Wallet, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { id: 'act5', type: 'favorite', label: 'New favorite', detail: 'Added Sakura Sushi to favorites', time: 'Mar 10, 6:45 PM', icon: Heart, color: 'text-red-500', bg: 'bg-red-50' },
-  { id: 'act6', type: 'order', label: 'Order delivered', detail: 'Taco Fiesta • $18.50', time: 'Mar 8, 7:30 PM', icon: ShoppingBag, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-];
+import { authService, customerService, favoriteService } from '../../services/api';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -53,29 +45,92 @@ export default function UserDashboard() {
   const { dark } = useTheme();
   const { walletBalance } = useCart();
 
+  const fallbackAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80';
+
   const [user, setUser] = useState({
-    name: 'John Doe',
-    email: 'john@delicious.com',
-    phone: '+250 788 123 456',
+    name: '',
+    email: '',
+    phone: '',
     location: 'Kigali, Rwanda',
-    memberSince: 'January 2026',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&q=80',
+    memberSince: '',
+    avatar: fallbackAvatar,
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({ ...user });
+  const [saving, setSaving] = useState(false);
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [counts, setCounts] = useState({ orders: 0, favorites: 0 });
+
+  // Build a recent-activity feed + counts from live orders & favorites
+  useEffect(() => {
+    Promise.all([
+      customerService.getMyOrders().catch(() => []),
+      favoriteService.getMyFavorites().catch(() => []),
+    ]).then(([orders, favorites]) => {
+      setCounts({ orders: (orders || []).length, favorites: (favorites || []).length });
+      const activity = (orders || []).slice(0, 6).map((o) => ({
+        id: o._id,
+        type: 'order',
+        label: `Order ${o.status}`,
+        detail: `${o.restaurant?.name || 'Restaurant'} • ${Number(o.totalAmount || 0).toFixed(2)}`,
+        time: new Date(o.createdAt).toLocaleDateString(),
+        icon: ShoppingBag,
+        color: 'text-emerald-600',
+        bg: 'bg-emerald-50',
+      }));
+      setRecentActivity(activity);
+    });
+  }, []);
+
+  // Load the authenticated customer from the backend
+  useEffect(() => {
+    let active = true;
+    authService
+      .fetchMe()
+      .then((me) => {
+        if (!active || !me) return;
+        const mapped = {
+          name: me.name || '',
+          email: me.email || '',
+          phone: me.phone || '',
+          location: 'Kigali, Rwanda',
+          memberSince: me.createdAt
+            ? new Date(me.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+            : '',
+          avatar: me.avatar?.url || fallbackAvatar,
+        };
+        setUser(mapped);
+        setEditForm(mapped);
+      })
+      .catch(() => {
+        navigate('/login');
+      });
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
 
   const stats = [
-    { label: 'Orders Placed', value: '24', icon: ShoppingBag, color: 'text-amber-500', colorHex: '#f59e0b', bg: 'bg-amber-50' },
-    { label: 'Reservations', value: '8', icon: Calendar, color: 'text-emerald-600', colorHex: '#059669', bg: 'bg-emerald-50' },
-    { label: 'Wallet Balance', value: `$${walletBalance.toFixed(2)}`, icon: Wallet, color: 'text-blue-600', colorHex: '#2563eb', bg: 'bg-blue-50' },
-    { label: 'Favorites', value: '12', icon: Heart, color: 'text-red-500', colorHex: '#ef4444', bg: 'bg-red-50' },
-    { label: 'Reward Points', value: '1,250', icon: Award, color: 'text-purple-600', colorHex: '#9333ea', bg: 'bg-purple-50' },
+    { label: 'Orders Placed', value: String(counts.orders), icon: ShoppingBag, color: 'text-amber-500', colorHex: '#f59e0b', bg: 'bg-amber-50' },
+    { label: 'Wallet Balance', value: `${walletBalance.toFixed(2)}`, icon: Wallet, color: 'text-blue-600', colorHex: '#2563eb', bg: 'bg-blue-50' },
+    { label: 'Favorites', value: String(counts.favorites), icon: Heart, color: 'text-red-500', colorHex: '#ef4444', bg: 'bg-red-50' },
   ];
 
-  const handleSaveProfile = () => {
-    setUser({ ...editForm });
-    setIsEditing(false);
+  const handleSaveProfile = async () => {
+    setSaving(true);
+    try {
+      await authService.updateProfile({
+        name: editForm.name,
+        phone: editForm.phone,
+      });
+      setUser({ ...editForm });
+      setIsEditing(false);
+    } catch (err) {
+      alert(err.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancelEdit = () => {
@@ -320,13 +375,14 @@ export default function UserDashboard() {
               </div>
 
               <div className="flex flex-col gap-3">
-                {MOCK_RECENT_ACTIVITY.slice(0, 5).map((activity) => {
+                {recentActivity.length === 0 ? (
+                  <p className="text-[11px] font-bold py-6 text-center" style={{ color: textMuted }}>No recent activity yet.</p>
+                ) : recentActivity.slice(0, 5).map((activity) => {
                   const Icon = activity.icon;
                   return (
                     <div
                       key={activity.id}
                       className="flex items-center gap-3 p-3 rounded-2xl transition-colors cursor-pointer"
-                      style={{ hover: { background: hoverBg } }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = hoverBg; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                     >
