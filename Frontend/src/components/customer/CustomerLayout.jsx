@@ -34,15 +34,15 @@ export default function CustomerLayout() {
 
   useEffect(() => {
     const user = authService.getCurrentUser();
-    if (!user) {
-      const demoUser = { _id: 'cust_demo', name: 'John Doe', email: 'john@delicious.com', role: 'customer' };
-      localStorage.setItem('df_user', JSON.stringify(demoUser));
-      localStorage.setItem('df_token', 'mock_jwt_customer_token');
-      setCurrentUser(demoUser);
-    } else {
-      setCurrentUser(user);
+    const token = localStorage.getItem('df_token');
+    if (!user || !token) {
+      navigate('/login');
+      return;
     }
-  }, []);
+    setCurrentUser(user);
+    // Refresh from the server so the header always shows live data
+    authService.fetchMe().then((fresh) => fresh && setCurrentUser(fresh)).catch(() => {});
+  }, [navigate]);
 
   const handleLogout = () => {
     authService.logout();
@@ -254,16 +254,20 @@ export default function CustomerLayout() {
                 onClick={() => setShowUserDropdown((d) => !d)}
                 className="flex items-center gap-2 cursor-pointer bg-transparent border-none py-1 pl-2 text-left"
               >
-                <div className="w-8 h-8 rounded-full overflow-hidden border-2" style={{ borderColor: borderCol }}>
-                  <img
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80"
-                    alt="User profile"
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-8 h-8 rounded-full overflow-hidden border-2 flex items-center justify-center bg-amber-500 text-black font-black text-[11px]" style={{ borderColor: borderCol }}>
+                  {currentUser?.avatar?.url ? (
+                    <img
+                      src={currentUser.avatar.url}
+                      alt="User profile"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    (currentUser?.name || 'U').charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div className="hidden sm:block">
                   <div className="text-[11px] font-extrabold" style={{ color: textColor }}>
-                    {currentUser?.name || 'John Doe'}
+                    {currentUser?.name || 'Guest'}
                   </div>
                   <div className="text-[9px] font-bold uppercase tracking-wider" style={{ color: textMuted }}>
                     Customer
