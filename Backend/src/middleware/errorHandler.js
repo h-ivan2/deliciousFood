@@ -39,9 +39,9 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // Log full error in dev only
-  if (process.env.NODE_ENV === "development") {
+  // if (process.env.NODE_ENV === "development") {
     console.error("💥 Error:", err);
-  }
+//}
 
   res.status(statusCode).json({
     success: false,
