@@ -15,7 +15,10 @@ import TableReservation from './pages/customer/TableReservation';
 import RestaurantMenu from './pages/customer/RestaurantMenu';
 import OrdersPage from './pages/customer/OrdersPage';
 import ReservationsPage from './pages/customer/ReservationsPage';
-import CustomerPlaceholder from './pages/customer/CustomerPlaceholder';
+import ProfilePage from './pages/customer/ProfilePage';
+import FavoritesPage from './pages/customer/FavoritesPage';
+import OffersPage from './pages/customer/OffersPage';
+import SettingsPage from './pages/customer/SettingsPage';
 
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboardHome from './pages/admin/AdminDashboardHome';
@@ -23,7 +26,8 @@ import AdminApproveRestaurants from './pages/admin/AdminApproveRestaurants';
 import AdminAllRestaurants from './pages/admin/AdminAllRestaurants';
 import AdminRestaurantApprovalDetail from './pages/admin/AdminRestaurantApprovalDetail';
 import AdminEditRestaurant from './pages/admin/AdminEditRestaurant';
-import AdminPlaceholder from './pages/admin/AdminPlaceholder';
+import AdminReports from './pages/admin/AdminReports';
+import AdminSettings from './pages/admin/AdminSettings';
 
 import OwnerLayout from './components/owner/OwnerLayout';
 import OwnerDashboardHome from './pages/owner/OwnerDashboardHome';
@@ -31,6 +35,7 @@ import OwnerOrdersPage from './pages/owner/OwnerOrdersPage';
 import OwnerMenuPage from './pages/owner/OwnerMenuPage';
 import OwnerCustomersPage from './pages/owner/OwnerCustomersPage';
 import OwnerReportsPage from './pages/owner/OwnerReportsPage';
+import OwnerSettingsPage from './pages/owner/OwnerSettingsPage';
 
 export default function App() {
   return (
@@ -54,10 +59,10 @@ export default function App() {
               <Route path="/orders"                     element={<OrdersPage />} />
               <Route path="/reservations"               element={<ReservationsPage />} />
               <Route path="/dashboard"                  element={<UserDashboard />} />
-              <Route path="/profile"                    element={<CustomerPlaceholder title="Profile" subtitle="Manage your personal information and preferences" />} />
-              <Route path="/favorites"                  element={<CustomerPlaceholder title="My Favorites" subtitle="Your saved restaurants and dishes" />} />
-              <Route path="/offers"                     element={<CustomerPlaceholder title="Special Offers" subtitle="Exclusive deals and promotions just for you" />} />
-              <Route path="/settings"                   element={<CustomerPlaceholder title="Settings" subtitle="Customize your app experience" />} />
+              <Route path="/profile"                    element={<ProfilePage />} />
+              <Route path="/favorites"                  element={<FavoritesPage />} />
+              <Route path="/offers"                     element={<OffersPage />} />
+              <Route path="/settings"                   element={<SettingsPage />} />
             </Route>
 
           
@@ -67,8 +72,8 @@ export default function App() {
               <Route path="approve/:id"                 element={<AdminRestaurantApprovalDetail />} />
               <Route path="restaurants"                 element={<AdminAllRestaurants />} />
               <Route path="restaurants/:id/edit"        element={<AdminEditRestaurant />} />
-              <Route path="reports"                     element={<AdminPlaceholder title="Reports" subtitle="Platform analytics and exports" />} />
-              <Route path="settings"                    element={<AdminPlaceholder title="Settings" subtitle="System configuration" />} />
+              <Route path="reports"                     element={<AdminReports />} />
+              <Route path="settings"                    element={<AdminSettings />} />
             </Route>
 
         
@@ -78,7 +83,7 @@ export default function App() {
               <Route path="menu"                        element={<OwnerMenuPage />} />
               <Route path="customers"                   element={<OwnerCustomersPage />} />
               <Route path="reports"                     element={<OwnerReportsPage />} />
-              <Route path="settings"                    element={<AdminPlaceholder title="Settings" subtitle="Update restaurant details and preferences" />} />
+              <Route path="settings"                    element={<OwnerSettingsPage />} />
             </Route>
 
           
