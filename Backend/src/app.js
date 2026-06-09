@@ -41,6 +41,8 @@ const reservationRoutes = require('./routes/reservation.routes');
 const notificationRoutes= require('./routes/notification.routes');
 const adminRoutes       = require('./routes/admin.routes');
 const tableRoutes       = require('./routes/table.routes');
+const favoriteRoutes    = require('./routes/favorite.routes');
+const offerRoutes       = require('./routes/offer.routes');
 
 app.use('/api/v1/auth',         authRoutes);
 app.use('/api/v1/users',        userRoutes);
@@ -52,6 +54,9 @@ app.use('/api/v1/reservations', reservationRoutes);
 app.use('/api/v1/notifications',notificationRoutes);
 app.use('/api/v1/admin',        adminRoutes);
 app.use('/api/v1/tables',       tableRoutes);
+app.use('/api/v1/favorites',    favoriteRoutes);
+app.use('/api/v1/offers',       offerRoutes);
+
 
 app.get('/health', (req, res) => {
   res.status(200).json({ success: true, message: 'Server is running' });
