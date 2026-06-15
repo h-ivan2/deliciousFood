@@ -29,6 +29,8 @@ import Footer from '../components/layout/Footer';
 import RestaurantCard from '../components/RestaurantCard';
 import DashboardMockup from '../components/DashboardMockup';
 import { BtnPrimary, BtnOutline, Tag } from '../components/ui';
+import { BackgroundPaths } from '../components/ui/BackgroundPaths';
+import { CircularTestimonials } from '../components/ui/CircularTestimonials';
 
 import {
   IMG_HERO_BG,
@@ -64,9 +66,24 @@ const HERO_FEATURES = [
 ];
 
 const TESTIMONIALS = [
-  { name: 'Sarah M.',  role: 'Restaurant Owner', text: 'Delicious Food transformed how we manage our restaurant. Orders are up 40% since joining!', rating: 5 },
-  { name: 'James K.',  role: 'Customer',         text: 'Finding great restaurants near me has never been easier. Love the real-time order tracking!', rating: 5 },
-  { name: 'Priya R.',  role: 'Restaurant Owner', text: 'The dashboard gives us complete control. Menu management and analytics are a breeze now.',    rating: 5 },
+  {
+    quote: "I was impressed by the food! And I could really tell that they use high-quality ingredients. The staff was friendly and attentive. I'll definitely be back for more!",
+    name: "Tamar Mendelson",
+    designation: "Restaurant Critic",
+    src: "https://images.unsplash.com/photo-1512316609839-ce289d3eba0a?q=80&w=1368&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+  },
+  {
+    quote: "This place exceeded all expectations! The atmosphere is inviting, and the staff truly goes above and beyond. I'll keep returning for more exceptional dining experience.",
+    name: "Joe Charlescraft",
+    designation: "Frequent Visitor",
+    src: "https://images.unsplash.com/photo-1628749528992-f5702133b686?q=80&w=1368&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fA%3D%3D",
+  },
+  {
+    quote: "Delicious Food is a hidden gem! The impeccable service and overall attention to detail created a memorable experience. I highly recommend it!",
+    name: "Martina Edelweist",
+    designation: "Satisfied Customer",
+    src: "https://images.unsplash.com/photo-1524267213992-b76e8577d046?q=80&w=1368&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fA%3D%3D",
+  },
 ];
 
 const HERO_STATS = [
@@ -404,23 +421,30 @@ export default function LandingPage() {
         className="relative flex items-center overflow-hidden"
         style={{ minHeight: '100vh', paddingTop: 70 }}
       >
-        {/* background */}
+        {/* Full-screen background image */}
         <div className="absolute inset-0 z-0">
           <img
             src={IMG_HERO_BG}
             alt=""
             className="w-full h-full object-cover"
-            style={{ opacity: dark ? 0.1 : 0.07 }}
           />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: dark
-                ? 'radial-gradient(ellipse at 15% 50%, rgba(245,179,1,0.09) 0%, transparent 55%), radial-gradient(ellipse at 80% 15%, rgba(139,26,26,0.07) 0%, transparent 55%)'
-                : 'radial-gradient(ellipse at 20% 50%, rgba(245,179,1,0.1) 0%, transparent 60%)',
-            }}
-          />
+          <div className="absolute inset-0" style={{ background: dark ? 'rgba(7,11,20,0.7)' : 'rgba(0,0,0,0.4)' }} />
         </div>
+
+        {/* Animated SVG path lines overlay */}
+        <div className="absolute inset-0 z-[1] opacity-[0.35] dark:opacity-[0.5]">
+          <BackgroundPaths />
+        </div>
+
+        {/* Gradient overlay for depth */}
+        <div
+          className="absolute inset-0 z-[2]"
+          style={{
+            background: dark
+              ? 'radial-gradient(ellipse at 15% 50%, rgba(245,179,1,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 15%, rgba(139,26,26,0.1) 0%, transparent 55%)'
+              : 'radial-gradient(ellipse at 20% 50%, rgba(245,179,1,0.12) 0%, transparent 60%)',
+          }}
+        />
 
         <div className="max-w-[1280px] mx-auto px-6 py-20 relative z-10 w-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
@@ -777,15 +801,15 @@ export default function LandingPage() {
       </section>
 
       {/* ════════════════════════════════════════════════════
-          TESTIMONIALS
+          TESTIMONIALS — Circular Carousel
       ════════════════════════════════════════════════════ */}
-      <section className="py-20" style={{ background: bg }}>
+      <section className="py-20" style={{ background: sectionAlt }}>
         <div className="max-w-[1280px] mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-14"
+            className="text-center mb-4"
           >
             <Tag>✦ Testimonials</Tag>
             <h2 className="font-display font-extrabold mt-4" style={{ fontSize: 'clamp(26px, 3vw, 42px)' }}>
@@ -793,27 +817,31 @@ export default function LandingPage() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className={`rounded-2xl p-8 ${dark ? 'glass-dark' : 'glass-light'}`}
-              >
-                <Quote size={28} color="#F5B301" />
-                <p className="text-sm leading-relaxed my-4" style={{ color: textSub }}>"{t.text}"</p>
-                <div className="flex gap-1 mb-4">
-                  {[...Array(t.rating)].map((_, j) => (
-                    <Star key={j} size={14} fill="#F5B301" color="#F5B301" />
-                  ))}
-                </div>
-                <div className="font-bold text-sm">{t.name}</div>
-                <div className="text-xs mt-0.5" style={{ color: '#F5B301' }}>{t.role}</div>
-              </motion.div>
-            ))}
+          <div className="flex items-center justify-center">
+            <CircularTestimonials
+              testimonials={TESTIMONIALS}
+              autoplay={true}
+              colors={dark ? {
+                name: "#f7f7ff",
+                designation: "#e1e1e1",
+                testimony: "#f1f1f7",
+                arrowBackground: "#0582CA",
+                arrowForeground: "#141414",
+                arrowHoverBackground: "#f7f7ff",
+              } : {
+                name: "#0a0a0a",
+                designation: "#454545",
+                testimony: "#171717",
+                arrowBackground: "#141414",
+                arrowForeground: "#f1f1f7",
+                arrowHoverBackground: "#00A6FB",
+              }}
+              fontSizes={{
+                name: "28px",
+                designation: "20px",
+                quote: "20px",
+              }}
+            />
           </div>
         </div>
       </section>
