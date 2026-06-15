@@ -28,6 +28,8 @@ import AdminRestaurantApprovalDetail from './pages/admin/AdminRestaurantApproval
 import AdminEditRestaurant from './pages/admin/AdminEditRestaurant';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 
 import OwnerLayout from './components/owner/OwnerLayout';
 import OwnerDashboardHome from './pages/owner/OwnerDashboardHome';
@@ -36,6 +38,7 @@ import OwnerMenuPage from './pages/owner/OwnerMenuPage';
 import OwnerCustomersPage from './pages/owner/OwnerCustomersPage';
 import OwnerReportsPage from './pages/owner/OwnerReportsPage';
 import OwnerSettingsPage from './pages/owner/OwnerSettingsPage';
+import OwnerReservationsPage from './pages/owner/OwnerReservationsPage';
 
 export default function App() {
   return (
@@ -72,6 +75,8 @@ export default function App() {
               <Route path="approve/:id"                 element={<AdminRestaurantApprovalDetail />} />
               <Route path="restaurants"                 element={<AdminAllRestaurants />} />
               <Route path="restaurants/:id/edit"        element={<AdminEditRestaurant />} />
+              <Route path="users"                       element={<AdminUsersPage />} />
+              <Route path="orders"                      element={<AdminOrdersPage />} />
               <Route path="reports"                     element={<AdminReports />} />
               <Route path="settings"                    element={<AdminSettings />} />
             </Route>
@@ -81,6 +86,7 @@ export default function App() {
               <Route index                              element={<OwnerDashboardHome />} />
               <Route path="orders"                      element={<OwnerOrdersPage />} />
               <Route path="menu"                        element={<OwnerMenuPage />} />
+              <Route path="reservations"                element={<OwnerReservationsPage />} />
               <Route path="customers"                   element={<OwnerCustomersPage />} />
               <Route path="reports"                     element={<OwnerReportsPage />} />
               <Route path="settings"                    element={<OwnerSettingsPage />} />
