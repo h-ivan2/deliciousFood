@@ -183,6 +183,16 @@ export const adminService = {
     await apiRequest(`/admin/restaurants/${id}`, { method: 'DELETE' });
     return true;
   },
+
+  getOrders: async (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.status) params.set('status', filters.status);
+    if (filters.page) params.set('page', filters.page);
+    if (filters.limit) params.set('limit', filters.limit);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const res = await apiRequest(`/admin/orders${query}`);
+    return res.data;
+  },
 };
 
 // 3. Customer Panel Services
@@ -369,6 +379,24 @@ export const ownerService = {
   /** Customers who have ordered from a restaurant. */
   getCustomers: async (restaurantId) => {
     const res = await apiRequest(`/orders/restaurant/${restaurantId}/customers`);
+    return res.data;
+  },
+
+  // ── Reservations management ─────────────────────────────
+  getRestaurantReservations: async (restaurantId, filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.status) params.set('status', filters.status);
+    if (filters.date) params.set('date', filters.date);
+    const query = params.toString() ? `?${params.toString()}` : '';
+    const res = await apiRequest(`/reservations/restaurant/${restaurantId}${query}`);
+    return res.data;
+  },
+
+  updateReservationStatus: async (id, status) => {
+    const res = await apiRequest(`/reservations/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
     return res.data;
   },
 
