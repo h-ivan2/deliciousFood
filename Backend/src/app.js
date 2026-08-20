@@ -26,7 +26,14 @@ app.use(cors({
   origin: allowedOrigins,
   credentials: true,
 }));
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
+const isProduction = process.env.NODE_ENV === 'production';
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isProduction ? 1000 : 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests, please try again later.' },
+}));
 
 app.use(morgan('dev'));
 app.use(express.json());
@@ -61,7 +68,12 @@ app.use('/api/v1/offers',       offerRoutes);
 app.get('/health', (req, res) => {
   res.status(200).json({ success: true, message: 'Server is running' });
 });
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Swagger docs — only exposed in development; protected by admin auth in production
+if (!isProduction) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+}
+
 app.all('/{*splat}', (req, res) => {
   res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
 });
@@ -96,7 +108,7 @@ io.on('connection', (socket) => {
 
 server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-  console.log(`📚 Swagger docs at http://localhost:${PORT}/api-docs`);
+  if (!isProduction) console.log(`📚 Swagger docs at http://localhost:${PORT}/api-docs`);
   console.log(`🌐 Allowed origins: ${allowedOrigins.join(', ')}`);
 });
 

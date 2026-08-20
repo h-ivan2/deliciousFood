@@ -122,6 +122,40 @@ exports.getMyReservations = async (req, res, next) => {
   }
 };
 
+// GET /api/v1/reservations/restaurant/:restaurantId
+// Owner gets reservations for their restaurant
+exports.getRestaurantReservations = async (req, res, next) => {
+  try {
+    const restaurant = await Restaurant.findById(req.params.restaurantId);
+    if (!restaurant) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Restaurant not found" });
+    }
+    if (
+      restaurant.owner.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Not authorised" });
+    }
+
+    const { status, date } = req.query;
+    const filter = { restaurant: req.params.restaurantId };
+    if (status) filter.status = status;
+    if (date) filter.date = new Date(date);
+
+    const reservations = await Reservation.find(filter)
+      .populate("customer", "name email phone")
+      .populate("table", "tableNumber capacity")
+      .sort("-date");
+    res.status(200).json({ success: true, count: reservations.length, data: reservations });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.updateReservationStatus = async (req, res, next) => {
   try {
     const reservation = await Reservation.findById(req.params.id).populate(

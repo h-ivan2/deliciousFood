@@ -14,6 +14,7 @@ router.get('/restaurants', ctrl.getRestaurants);
 router.get('/restaurants/:id', ctrl.getRestaurantById);
 router.put('/restaurants/:id', ctrl.updateRestaurant);
 router.delete('/restaurants/:id', ctrl.deleteRestaurant);
+router.get('/orders', ctrl.getAllOrders);
 router.get('/stats', ctrl.getPlatformStats);
 
 module.exports = router;

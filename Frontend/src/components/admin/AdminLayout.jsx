@@ -3,19 +3,14 @@ import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 
 import {
-
   LayoutDashboard,
-
   UtensilsCrossed,
-
   List,
-
   ClipboardList,
-
   Settings,
-
   LogOut,
-
+  Users,
+  ShoppingBag,
 } from 'lucide-react';
 
 import { Logo, ThemeToggle } from '../ui';
@@ -27,17 +22,13 @@ import { useAdminTheme } from '../../hooks/useAdminTheme';
 
 
 const NAV = [
-
   { to: '/admin', end: true, label: 'Dashboard', Icon: LayoutDashboard },
-
   { to: '/admin/approve', end: false, label: 'Approve Restaurants', Icon: UtensilsCrossed, badgeKey: 'pending' },
-
   { to: '/admin/restaurants', end: false, label: 'All Restaurants', Icon: List },
-
+  { to: '/admin/users', end: false, label: 'Users', Icon: Users },
+  { to: '/admin/orders', end: false, label: 'Orders', Icon: ShoppingBag },
   { to: '/admin/reports', end: false, label: 'Reports', Icon: ClipboardList },
-
   { to: '/admin/settings', end: false, label: 'Settings', Icon: Settings },
-
 ];
 
 

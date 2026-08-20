@@ -5,6 +5,7 @@ const { protect, authorize } = require('../middleware/auth');
 
 router.post('/', protect, authorize('customer'), ctrl.createReservation);
 router.get('/my', protect, ctrl.getMyReservations);
+router.get('/restaurant/:restaurantId', protect, authorize('owner', 'admin'), ctrl.getRestaurantReservations);
 router.patch('/:id/status', protect, authorize('owner', 'admin'), ctrl.updateReservationStatus);
 router.patch('/:id/cancel', protect, authorize('customer'), ctrl.cancelReservation);
 

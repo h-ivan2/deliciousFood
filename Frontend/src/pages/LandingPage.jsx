@@ -410,9 +410,17 @@ export default function LandingPage() {
   const sectionAlt = dark ? '#0B1020' : '#ffffff';
   const textSub   = dark ? 'rgba(255,255,255,0.6)' : '#666';
 
+  // Hero-specific colors — stay light in both modes because hero has a dark overlay over the bg image
+  const heroText = dark ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.92)';
+  const heroTextMuted = dark ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.75)';
+  const heroOverlay = dark ? 'rgba(7,11,20,0.7)' : 'rgba(0,0,0,0.55)';
+
   return (
-    <div style={{ background: bg, minHeight: '100vh' }}>
+    <div className="relative min-h-screen overflow-x-hidden" style={{ background: bg }}>
       <Navbar />
+
+      {/* Main content wrapper — high z-index so it scrolls over the fixed footer */}
+      <main className="relative z-10 w-full min-h-[120vh]" style={{ background: bg }}>
 
       {/* ════════════════════════════════════════════════════
           HERO
@@ -428,7 +436,7 @@ export default function LandingPage() {
             alt=""
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0" style={{ background: dark ? 'rgba(7,11,20,0.7)' : 'rgba(0,0,0,0.4)' }} />
+          <div className="absolute inset-0" style={{ background: heroOverlay }} />
         </div>
 
         {/* Animated SVG path lines overlay */}
@@ -467,7 +475,7 @@ export default function LandingPage() {
                 style={{ fontSize: 'clamp(36px, 4.5vw, 62px)' }}
               >
                 Powering{' '}
-                <span style={{ color: dark ? 'rgba(255,255,255,0.95)' : '#1a1a1a' }}>
+                <span style={{ color: heroText }}>
                   Restaurants.
                 </span>
                 <br />
@@ -477,7 +485,7 @@ export default function LandingPage() {
               <motion.p
                 {...fadeUp(0.25)}
                 className="text-lg leading-relaxed mb-10 max-w-[480px]"
-                style={{ color: textSub }}
+                style={{ color: heroTextMuted }}
               >
                 Delicious Food is a complete platform that helps restaurants
                 manage, grow, and serve better — from dashboard to doorstep.
@@ -497,8 +505,8 @@ export default function LandingPage() {
                       <Icon size={17} color="#F5B301" />
                     </div>
                     <div>
-                      <div className="font-bold text-xs mb-0.5">{title}</div>
-                      <div className="text-xs leading-snug" style={{ color: textSub }}>{sub}</div>
+                      <div className="font-bold text-xs mb-0.5" style={{ color: heroText }}>{title}</div>
+                      <div className="text-xs leading-snug" style={{ color: heroTextMuted }}>{sub}</div>
                     </div>
                   </div>
                 ))}
@@ -547,7 +555,7 @@ export default function LandingPage() {
                     >
                       {value}
                     </div>
-                    <div className="text-xs mt-0.5" style={{ color: textSub }}>{label}</div>
+                    <div className="text-xs mt-0.5" style={{ color: heroTextMuted }}>{label}</div>
                   </div>
                 ))}
               </motion.div>
@@ -888,6 +896,8 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
+
+      </main>
 
       <Footer />
     </div>

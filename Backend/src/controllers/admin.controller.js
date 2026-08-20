@@ -195,3 +195,39 @@ exports.getPlatformStats = async (req, res, next) => {
     next(err);
   }
 };
+
+// GET /api/v1/admin/orders
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const filter = {};
+    if (status) filter.status = status;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate("customer", "name email")
+        .populate({
+          path: "restaurant",
+          select: "name",
+        })
+        .populate("items.menuItem", "name price image")
+        .sort("-createdAt")
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Order.countDocuments(filter),
+    ]);
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      total,
+      pages: Math.ceil(total / parseInt(limit)),
+      page: parseInt(page),
+      data: orders,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

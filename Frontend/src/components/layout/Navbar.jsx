@@ -32,11 +32,11 @@ export default function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${bgClass}`}
     >
       <div className="max-w-[1280px] mx-auto px-6 h-[70px] flex items-center justify-between">
-        <Logo onClick={() => navigate('/')} />
+        <Logo onClick={() => navigate('/')} style={!scrolled ? { color: '#fff' } : {}} />
 
         <div className="hidden md:flex items-center gap-9">
           {NAV_LINKS.map((link) => (
-            <a key={link} className={`nav-link ${dark ? 'text-white/75' : 'text-black/70'}`}>
+            <a key={link} className={`nav-link ${!scrolled ? 'text-white/85' : dark ? 'text-white/75' : 'text-black/70'}`}>
               {link}
             </a>
           ))}
@@ -44,14 +44,14 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <BtnOutline dark={dark} onClick={() => navigate('/login')} style={{ padding: '9px 20px', fontSize: 14 }}>
+          <BtnOutline dark={!scrolled ? true : dark} onClick={() => navigate('/login')} style={{ padding: '9px 20px', fontSize: 14 }}>
             Login
           </BtnOutline>
           <BtnPrimary onClick={() => navigate('/signup')} style={{ padding: '9px 20px', fontSize: 14 }}>
             Get Started
           </BtnPrimary>
           <button
-            className={`md:hidden p-2 rounded-lg border-none bg-transparent cursor-pointer ${dark ? 'text-white' : 'text-black'}`}
+            className={`md:hidden p-2 rounded-lg border-none bg-transparent cursor-pointer ${!scrolled ? 'text-white' : dark ? 'text-white' : 'text-black'}`}
             onClick={() => setMobileOpen((o) => !o)}
           >
             {mobileOpen ? <Icons.Close /> : <Icons.Menu />}
@@ -69,7 +69,7 @@ export default function Navbar() {
           >
             <div className="px-6 py-4 flex flex-col gap-3">
               {NAV_LINKS.map((link) => (
-                <a key={link} className={`nav-link text-base py-2 ${dark ? 'text-white/75' : 'text-black/70'}`} onClick={() => setMobileOpen(false)}>
+                <a key={link} className={`nav-link text-base py-2 ${!scrolled ? 'text-white/85' : dark ? 'text-white/75' : 'text-black/70'}`} onClick={() => setMobileOpen(false)}>
                   {link}
                 </a>
               ))}

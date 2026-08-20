@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   Users,
+  CalendarClock,
 } from 'lucide-react';
 import { Logo, ThemeToggle } from '../ui';
 import { authService } from '../../services/api';
@@ -17,6 +18,7 @@ const NAV = [
   { to: '/owner', end: true, label: 'Dashboard', Icon: LayoutDashboard },
   { to: '/owner/orders', end: false, label: 'Orders', Icon: ClipboardList },
   { to: '/owner/menu', end: false, label: 'Menu Management', Icon: UtensilsCrossed },
+  { to: '/owner/reservations', end: false, label: 'Reservations', Icon: CalendarClock },
   { to: '/owner/customers', end: false, label: 'Customers', Icon: Users },
   { to: '/owner/reports', end: false, label: 'Reports', Icon: List },
   { to: '/owner/settings', end: false, label: 'Settings', Icon: Settings },

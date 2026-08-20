@@ -39,7 +39,7 @@ import {
 // ─────────────────────────────────────────────
 // LOGO
 // ─────────────────────────────────────────────
-export function Logo({ size = 'md', onClick }) {
+export function Logo({ size = 'md', onClick, style = {} }) {
   const sizeMap = { sm: 48, md: 72, lg: 96 };
   const px = sizeMap[size] || 72;
 
@@ -47,6 +47,7 @@ export function Logo({ size = 'md', onClick }) {
     <div
       onClick={onClick}
       className="flex items-center gap-3 cursor-pointer select-none"
+      style={style}
     >
       {IMG_LOGO ? (
         <img
