@@ -27,8 +27,6 @@ const OWNER_SLIDES = [
   { img: IMG_REST_SPICE_ROUTE, text: 'Owning a restaurant is not just about food. It is about creating moments.', author: 'Delicious Food' },
 ];
 
-const PERKS = ['Reach more customers', 'Manage Orders easily', 'Grow your Business'];
-
 export default function Signup() {
   const { dark } = useTheme();
   const navigate = useNavigate();

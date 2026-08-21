@@ -108,9 +108,9 @@ export default function RestaurantMenu() {
     e.preventDefault();
     if (promoCode.trim().toLowerCase() === 'welcome20') {
       setPromoApplied(true);
-      setPromoDiscount(6.40); // seed mock discount
+      setPromoDiscount(6.40);
     } else if (promoCode.trim()) {
-      alert("Invalid code. Try 'WELCOME20' for a demo discount!");
+      alert('Invalid promo code. Please try again.');
     }
   };
 

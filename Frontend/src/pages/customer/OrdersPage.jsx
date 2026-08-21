@@ -40,13 +40,10 @@ export default function OrdersPage() {
     const socket = io(SOCKET_URL);
 
     socket.on('connect', () => {
-      console.log('🔌 Customer socket connected:', socket.id);
       socket.emit('join_room', `user_${user._id}`);
     });
 
     socket.on('order_status_update', (data) => {
-      console.log('⚡ Order status update received:', data);
-      
       // Update selected order if it is the one updated
       setSelectedOrder((prev) => {
         if (prev && prev._id === data.orderId) {
