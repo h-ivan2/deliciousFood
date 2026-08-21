@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTheme } from '../context/ThemeContext';
 import { Icons } from './ui';
 
 export default function RestaurantCard({ img, name, rating, reviews, time, delay = 0 }) {
   const { dark } = useTheme();
+  const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [hovered, setHovered] = useState(false);
 
@@ -19,6 +21,7 @@ export default function RestaurantCard({ img, name, rating, reviews, time, delay
       style={{ boxShadow: hovered ? '0 24px 48px rgba(0,0,0,0.25)' : 'none' }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => navigate('/browse')}
     >
       <div className="relative overflow-hidden" style={{ height: 200 }}>
         <motion.img

@@ -4,7 +4,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { Logo, ThemeToggle, BtnPrimary, BtnOutline, Icons } from '../ui';
 
-const NAV_LINKS = ['Features', 'Restaurants', 'About', 'Contact'];
+const NAV_LINKS = [
+  { label: 'Features',  target: 'section-tablets' },
+  { label: 'Restaurants', target: 'section-restaurants' },
+  { label: 'Roles',     target: 'section-roles' },
+  { label: 'Contact',   target: 'section-cta' },
+];
+
+function scrollToId(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 export default function Navbar() {
   const { dark } = useTheme();
@@ -35,9 +45,9 @@ export default function Navbar() {
         <Logo onClick={() => navigate('/')} style={!scrolled ? { color: '#fff' } : {}} />
 
         <div className="hidden md:flex items-center gap-9">
-          {NAV_LINKS.map((link) => (
-            <a key={link} className={`nav-link ${!scrolled ? 'text-white/85' : dark ? 'text-white/75' : 'text-black/70'}`}>
-              {link}
+          {NAV_LINKS.map(({ label, target }) => (
+            <a key={label} className={`nav-link ${!scrolled ? 'text-white/85' : dark ? 'text-white/75' : 'text-black/70'}`} onClick={() => scrollToId(target)}>
+              {label}
             </a>
           ))}
         </div>
@@ -68,9 +78,9 @@ export default function Navbar() {
             className={`md:hidden overflow-hidden ${dark ? 'bg-[#0B1020]' : 'bg-white'} border-t ${dark ? 'border-white/5' : 'border-black/5'}`}
           >
             <div className="px-6 py-4 flex flex-col gap-3">
-              {NAV_LINKS.map((link) => (
-                <a key={link} className={`nav-link text-base py-2 ${!scrolled ? 'text-white/85' : dark ? 'text-white/75' : 'text-black/70'}`} onClick={() => setMobileOpen(false)}>
-                  {link}
+              {NAV_LINKS.map(({ label, target }) => (
+                <a key={label} className={`nav-link text-base py-2 ${!scrolled ? 'text-white/85' : dark ? 'text-white/75' : 'text-black/70'}`} onClick={() => { scrollToId(target); setMobileOpen(false); }}>
+                  {label}
                 </a>
               ))}
               <div className="flex gap-3 mt-2">

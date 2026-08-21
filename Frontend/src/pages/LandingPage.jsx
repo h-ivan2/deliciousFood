@@ -610,7 +610,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════════
           3 TABLETS SECTION
       ════════════════════════════════════════════════════ */}
-      <section className="py-20 overflow-hidden" style={{ background: bg }}>
+      <section id="section-tablets" className="py-20 overflow-hidden" style={{ background: bg }}>
         <div className="max-w-[1280px] mx-auto px-6">
 
           {/* 3-tablet layout */}
@@ -711,7 +711,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════════
           RESTAURANTS
       ════════════════════════════════════════════════════ */}
-      <section className="py-20" style={{ background: bg }}>
+      <section id="section-restaurants" className="py-20" style={{ background: bg }}>
         <div className="max-w-[1280px] mx-auto px-6">
           <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
             <motion.div
@@ -727,7 +727,7 @@ export default function LandingPage() {
                 Top <span className="gradient-text">Restaurants</span>
               </h2>
             </motion.div>
-            <BtnPrimary style={{ padding: '10px 24px', fontSize: 14 }}>View All</BtnPrimary>
+            <BtnPrimary onClick={() => navigate('/browse')} style={{ padding: '10px 24px', fontSize: 14 }}>View All</BtnPrimary>
           </div>
 
           {/* category pills */}
@@ -763,7 +763,7 @@ export default function LandingPage() {
       {/* ════════════════════════════════════════════════════
           ROLES
       ════════════════════════════════════════════════════ */}
-      <section className="py-20" style={{ background: sectionAlt }}>
+      <section id="section-roles" className="py-20" style={{ background: sectionAlt }}>
         <div className="max-w-[1280px] mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -781,12 +781,13 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              { Icon: Store,       label: 'Restaurant Owner', desc: 'Menu management, order tracking, customer insights & revenue reports.',   color: '#F5B301' },
-              { Icon: UserCircle2, label: 'Customer',         desc: 'Browse restaurants, place orders, track delivery live on the map.',        color: '#22c55e' },
-              { Icon: Settings2,   label: 'Super Admin',      desc: 'Approve restaurants, manage the platform, monitor analytics & settings.', color: '#a855f7' },
-            ].map(({ Icon, label, desc, color }, i) => (
+              { Icon: Store,       label: 'Restaurant Owner', desc: 'Menu management, order tracking, customer insights & revenue reports.',   color: '#F5B301', to: '/signup?role=owner' },
+              { Icon: UserCircle2, label: 'Customer',         desc: 'Browse restaurants, place orders, track delivery live on the map.',        color: '#22c55e', to: '/signup?role=customer' },
+              { Icon: Settings2,   label: 'Super Admin',      desc: 'Approve restaurants, manage the platform, monitor analytics & settings.', color: '#a855f7', to: '/login' },
+            ].map(({ Icon, label, desc, color, to }, i) => (
               <motion.div
                 key={label}
+                onClick={() => navigate(to)}
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -858,6 +859,7 @@ export default function LandingPage() {
           CTA
       ════════════════════════════════════════════════════ */}
       <section
+        id="section-cta"
         className="py-24 text-center"
         style={{ background: 'linear-gradient(135deg, rgba(245,179,1,0.09), rgba(139,26,26,0.07))' }}
       >

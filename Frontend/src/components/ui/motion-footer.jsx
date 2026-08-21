@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cn } from "@/lib/utils";
@@ -191,16 +192,31 @@ function MagneticButton({ className, children, as: Component = "button", ...prop
 }
 
 const FOOTER_COLS = [
-  { title: 'Platform', links: ['Features', 'Restaurants', 'Pricing', 'About'] },
-  { title: 'Company', links: ['Blog', 'Careers', 'Press', 'Contact'] },
-  { title: 'Legal', links: ['Privacy', 'Terms', 'Cookie Policy', 'Licenses'] },
+  { title: 'Platform', links: [
+    { label: 'Features',    to: '/explore' },
+    { label: 'Restaurants', to: '/browse' },
+    { label: 'Pricing',     to: '/' },
+    { label: 'About',       to: '/' },
+  ]},
+  { title: 'Company', links: [
+    { label: 'Blog',     to: '/' },
+    { label: 'Careers',  to: '/' },
+    { label: 'Press',    to: '/' },
+    { label: 'Contact',  to: '/' },
+  ]},
+  { title: 'Legal', links: [
+    { label: 'Privacy',       to: '/' },
+    { label: 'Terms',         to: '/' },
+    { label: 'Cookie Policy', to: '/' },
+    { label: 'Licenses',      to: '/' },
+  ]},
 ];
 
 const SOCIAL = [
-  { icon: <Twitter size={16} />, label: 'Twitter' },
-  { icon: <Instagram size={16} />, label: 'Instagram' },
-  { icon: <Linkedin size={16} />, label: 'LinkedIn' },
-  { icon: <Facebook size={16} />, label: 'Facebook' },
+  { icon: <Twitter size={16} />,   label: 'Twitter',   href: 'https://twitter.com' },
+  { icon: <Instagram size={16} />, label: 'Instagram',  href: 'https://instagram.com' },
+  { icon: <Linkedin size={16} />,  label: 'LinkedIn',   href: 'https://linkedin.com' },
+  { icon: <Facebook size={16} />,  label: 'Facebook',   href: 'https://facebook.com' },
 ];
 
 // -------------------------------------------------------------------------
@@ -269,6 +285,8 @@ export default function CinematicFooter() {
     return () => ctx.revert();
   }, []);
 
+  const navigate = useNavigate();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -321,10 +339,13 @@ export default function CinematicFooter() {
                     <div className="text-accent font-bold text-sm mb-4 uppercase tracking-widest">{col.title}</div>
                     {col.links.map((link) => (
                       <div
-                        key={link}
+                        key={link.label}
                         className="text-sm mb-2.5 cursor-pointer transition-colors duration-200 hover:text-accent text-muted-foreground"
+                        onClick={() => {
+                          if (link.to) navigate(link.to);
+                        }}
                       >
-                        {link}
+                        {link.label}
                       </div>
                     ))}
                   </div>
@@ -344,7 +365,7 @@ export default function CinematicFooter() {
                 <MagneticButton as="a" href="#" className="footer-glass-pill px-6 py-3 rounded-full text-muted-foreground font-medium text-xs md:text-sm hover:text-foreground">
                   Terms of Service
                 </MagneticButton>
-                <MagneticButton as="a" href="#" className="footer-glass-pill px-6 py-3 rounded-full text-muted-foreground font-medium text-xs md:text-sm hover:text-foreground">
+                <MagneticButton as="a" href="#" onClick={(e) => { e.preventDefault(); navigate('/settings'); }} className="footer-glass-pill px-6 py-3 rounded-full text-muted-foreground font-medium text-xs md:text-sm hover:text-foreground">
                   Support
                 </MagneticButton>
               </div>
@@ -361,11 +382,13 @@ export default function CinematicFooter() {
 
             {/* Social Icons */}
             <div className="flex gap-3 order-1 md:order-2">
-              {SOCIAL.map(({ icon, label }) => (
+              {SOCIAL.map(({ icon, label, href }) => (
                 <MagneticButton
                   key={label}
                   as="a"
-                  href="#"
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={label}
                   className="w-9 h-9 rounded-full footer-glass-pill flex items-center justify-center text-muted-foreground hover:text-foreground"
                 >

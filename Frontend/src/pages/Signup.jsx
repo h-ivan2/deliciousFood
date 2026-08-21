@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react'; 
 import { useTheme } from '../context/ThemeContext';
-import { Logo, ThemeToggle } from '../components/ui'; 
+import { Logo, ThemeToggle, Icons } from '../components/ui';
 import { authService } from '../services/api';
 import {
   IMG_LOGIN_BG,
@@ -115,9 +115,9 @@ export default function Signup() {
           <div
             className="inline-flex items-center gap-2 text-xs font-semibold mt-3 px-3 py-1.5 rounded-full"
             style={{
-              background: isOwner ? 'rgba(245,179,1,0.12)' : 'rgba(34,197,94,0.12)',
-              border: `1px solid ${isOwner ? 'rgba(245,179,1,0.3)' : 'rgba(34,197,94,0.3)'}`,
-              color: isOwner ? '#F5B301' : '#22c55e',
+              background: 'rgba(245,179,1,0.12)',
+              border: '1px solid rgba(245,179,1,0.3)',
+              color: '#F5B301',
             }}
           >
             {isOwner ? '🍽  Restaurant Owner' : '👤  Customer'}
@@ -133,30 +133,92 @@ export default function Signup() {
         <form onSubmit={handleSignup} className="flex flex-col gap-4">
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: labelColor }}>Full Name</label>
-            <input type="text" value={form.name} onChange={(e) => setForm(f=>({...f, name: e.target.value}))} placeholder="Enter your full name" className="w-full p-4 rounded-xl border" style={{ background: inputBg, borderColor: inputBorder, color: inputColor }} required />
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: subColor }}><Icons.User /></span>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm(f=>({...f, name: e.target.value}))}
+                placeholder="Enter your full name"
+                className="w-full rounded-xl outline-none transition-all duration-200 text-sm"
+                style={{ padding: '13px 16px 13px 44px', background: inputBg, border: `1.5px solid ${inputBorder}`, color: inputColor, fontFamily: 'DM Sans, sans-serif' }}
+                onFocus={(e) => { e.target.style.borderColor = '#F5B301'; e.target.style.background = 'rgba(245,179,1,0.05)'; }}
+                onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.background = inputBg; }}
+                required
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: labelColor }}>Email</label>
-            <input type="email" value={form.email} onChange={(e) => setForm(f=>({...f, email: e.target.value}))} placeholder="Enter your email" className="w-full p-4 rounded-xl border" style={{ background: inputBg, borderColor: inputBorder, color: inputColor }} required />
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: subColor }}><Icons.Mail /></span>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm(f=>({...f, email: e.target.value}))}
+                placeholder="Enter your email"
+                className="w-full rounded-xl outline-none transition-all duration-200 text-sm"
+                style={{ padding: '13px 16px 13px 44px', background: inputBg, border: `1.5px solid ${inputBorder}`, color: inputColor, fontFamily: 'DM Sans, sans-serif' }}
+                onFocus={(e) => { e.target.style.borderColor = '#F5B301'; e.target.style.background = 'rgba(245,179,1,0.05)'; }}
+                onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.background = inputBg; }}
+                required
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: labelColor }}>Password</label>
-            <input type={showPass ? 'text' : 'password'} value={form.password} onChange={(e) => setForm(f=>({...f, password: e.target.value}))} placeholder="Create password" className="w-full p-4 rounded-xl border" style={{ background: inputBg, borderColor: inputBorder, color: inputColor }} required />
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: subColor }}><Icons.Lock /></span>
+              <input
+                type={showPass ? 'text' : 'password'}
+                value={form.password}
+                onChange={(e) => setForm(f=>({...f, password: e.target.value}))}
+                placeholder="Create password"
+                className="w-full rounded-xl outline-none transition-all duration-200 text-sm"
+                style={{ padding: '13px 44px 13px 44px', background: inputBg, border: `1.5px solid ${inputBorder}`, color: inputColor, fontFamily: 'DM Sans, sans-serif' }}
+                onFocus={(e) => { e.target.style.borderColor = '#F5B301'; e.target.style.background = 'rgba(245,179,1,0.05)'; }}
+                onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.background = inputBg; }}
+                required
+              />
+              <button type="button" onClick={() => setShowPass(s => !s)} className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent cursor-pointer" style={{ color: subColor }}>
+                {showPass ? <Icons.EyeOff /> : <Icons.Eye />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-semibold mb-2" style={{ color: labelColor }}>Confirm Password</label>
-            <input type={showConfirm ? 'text' : 'password'} value={form.confirm} onChange={(e) => setForm(f=>({...f, confirm: e.target.value}))} placeholder="Confirm your password" className="w-full p-4 rounded-xl border" style={{ background: inputBg, borderColor: inputBorder, color: inputColor }} required />
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: subColor }}><Icons.Lock /></span>
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                value={form.confirm}
+                onChange={(e) => setForm(f=>({...f, confirm: e.target.value}))}
+                placeholder="Confirm your password"
+                className="w-full rounded-xl outline-none transition-all duration-200 text-sm"
+                style={{ padding: '13px 44px 13px 44px', background: inputBg, border: `1.5px solid ${inputBorder}`, color: inputColor, fontFamily: 'DM Sans, sans-serif' }}
+                onFocus={(e) => { e.target.style.borderColor = '#F5B301'; e.target.style.background = 'rgba(245,179,1,0.05)'; }}
+                onBlur={(e) => { e.target.style.borderColor = inputBorder; e.target.style.background = inputBg; }}
+                required
+              />
+              <button type="button" onClick={() => setShowConfirm(s => !s)} className="absolute right-4 top-1/2 -translate-y-1/2 border-none bg-transparent cursor-pointer" style={{ color: subColor }}>
+                {showConfirm ? <Icons.EyeOff /> : <Icons.Eye />}
+              </button>
+            </div>
           </div>
 
           {error && <p className="text-sm font-medium" style={{ color: '#ef4444' }}>{error}</p>}
 
           <motion.button
             type="submit"
-            whileHover={{ y: -2 }}
-            className="w-full rounded-full font-bold p-4 mt-2"
-            style={{ background: isOwner ? '#F5B301' : '#22c55e', color: '#000' }}
+            whileHover={{ y: -2, boxShadow: '0 8px 28px rgba(245,179,1,0.4)' }}
+            whileTap={{ scale: 0.98 }}
+            className="w-full rounded-full font-bold text-base flex items-center justify-center gap-2 border-none cursor-pointer transition-all duration-200"
+            style={{ background: '#F5B301', color: '#000', padding: '15px', fontFamily: 'DM Sans, sans-serif' }}
           >
             {isOwner ? 'Create Owner Account' : 'Create Account'}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+            </svg>
           </motion.button>
 
           <p className="text-xs text-center mt-2" style={{ color: subColor }}>
@@ -165,7 +227,7 @@ export default function Signup() {
               type="button"
               onClick={() => navigate('/login')}
               className="font-semibold underline cursor-pointer bg-transparent border-none"
-              style={{ color: isOwner ? '#F5B301' : '#22c55e' }}
+              style={{ color: '#F5B301' }}
             >
               Sign In
             </button>
