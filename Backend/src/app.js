@@ -2,7 +2,7 @@ const express      = require('express');
 const http         = require('http');
 const { Server }   = require('socket.io');
 const dotenv       = require('dotenv');
-const cors         = require('cors');
+
 const helmet       = require('helmet');
 const morgan       = require('morgan');
 const rateLimit    = require('express-rate-limit');
@@ -22,10 +22,22 @@ const allowedOrigins = process.env.CLIENT_URL
   : ['http://localhost:3000', 'http://localhost:5173'];
 
 app.use(helmet());
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+
+// Custom CORS middleware (Express 5 compatible — replaces cors package)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  next();
+});
 const isProduction = process.env.NODE_ENV === 'production';
 app.use(rateLimit({
   windowMs: 15 * 60 * 1000,
