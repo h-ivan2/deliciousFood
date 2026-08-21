@@ -1,4 +1,4 @@
-# Delicious Food 🍽️
+# Delicious Food 
 
 A full-stack restaurant management and food ordering platform built with React and Node.js. Supports three roles — Super Admin, Restaurant Owner, and Customer — with real-time order tracking via WebSockets.
 
