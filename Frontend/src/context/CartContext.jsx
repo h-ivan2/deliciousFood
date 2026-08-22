@@ -24,7 +24,7 @@ export function CartProvider({ children }) {
 
   const [walletBalance, setWalletBalance] = useState(() => {
     const saved = localStorage.getItem('df_wallet_balance');
-    return saved ? Number(saved) : 25.60;
+    return saved ? Number(saved) : 0;
   });
 
   useEffect(() => {

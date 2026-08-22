@@ -38,6 +38,16 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
     },
+    paymentMethod: {
+        cardNumber: { type: String, trim: true },
+        cardHolder: { type: String, trim: true },
+        expiryDate: { type: String, trim: true },
+        cardType: { type: String, enum: ['visa', 'mastercard', 'amex', ''], default: '' },
+    },
+    hasPaymentMethod: {
+        type: Boolean,
+        default: false,
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
 }, { timestamps: true });

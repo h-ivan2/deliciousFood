@@ -69,7 +69,7 @@ export default function Signup() {
       if (isOwner) {
         navigate('/register-restaurant');
       } else {
-        navigate('/explore');
+        navigate('/setup-payment');
       }
     } catch (err) {
       setError(err.message || 'Signup failed. Please try again.');

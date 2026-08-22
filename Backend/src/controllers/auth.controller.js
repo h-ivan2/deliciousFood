@@ -23,7 +23,7 @@ const sendToken = (user, statusCode, res) => {
 // ── POST /api/v1/auth/register ───────────────────────────────────────────────
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, paymentMethod } = req.body;
 
     // Prevent anyone from self-registering as admin
     if (role === "admin") {
@@ -41,7 +41,17 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    const user = await User.create({ name, email, password, role });
+    const userData = { name, email, password, role };
+    if (paymentMethod && paymentMethod.cardNumber) {
+      const raw = paymentMethod.cardNumber.replace(/\s/g, '');
+      userData.paymentMethod = {
+        ...paymentMethod,
+        cardNumber: '**** **** **** ' + raw.slice(-4),
+      };
+      userData.hasPaymentMethod = true;
+    }
+
+    const user = await User.create(userData);
     sendToken(user, 201, res);
   } catch (err) {
     next(err);
@@ -154,11 +164,19 @@ exports.resetPassword = async (req, res, next) => {
 exports.updateMe = async (req, res, next) => {
   try {
     // Whitelist the fields a user is allowed to change about themselves
-    const allowed = ["name", "phone", "avatar"];
+    const allowed = ["name", "phone", "avatar", "paymentMethod"];
     const updates = {};
     allowed.forEach((f) => {
       if (req.body[f] !== undefined) updates[f] = req.body[f];
     });
+
+    // Set hasPaymentMethod flag when payment details are provided
+    if (updates.paymentMethod && updates.paymentMethod.cardNumber) {
+      // Mask card number — store only last 4 digits
+      const raw = updates.paymentMethod.cardNumber.replace(/\s/g, '');
+      updates.paymentMethod.cardNumber = '**** **** **** ' + raw.slice(-4);
+      updates.hasPaymentMethod = true;
+    }
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, {
       new: true,

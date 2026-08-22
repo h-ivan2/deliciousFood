@@ -4,6 +4,7 @@ import { CartProvider } from './context/CartContext';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import PaymentSetup from './pages/PaymentSetup';
 import RegisterRestaurant from './pages/RegisterRestaurant';
 
 import CustomerLayout from './components/customer/CustomerLayout';
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/"                    element={<LandingPage />} />
             <Route path="/login"               element={<Login />} />
             <Route path="/signup"              element={<Signup />} />
+            <Route path="/setup-payment"         element={<PaymentSetup />} />
             <Route path="/register-restaurant" element={<RegisterRestaurant />} />
 
          
