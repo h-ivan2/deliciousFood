@@ -97,7 +97,14 @@ export default function CheckoutPage() {
         quantity: item.quantity,
       }));
 
-      await customerService.placeOrder({
+      // Validate wallet balance before placing order
+      if (paymentChoice === 'wallet' && walletBalance < total) {
+        setOrderError('Insufficient wallet balance. Please top up your wallet or choose another payment method.');
+        setIsPlacingOrder(false);
+        return;
+      }
+
+      const orderRes = await customerService.placeOrder({
         restaurant: cartRestaurant?._id,
         items: orderItems,
         orderType,
@@ -107,8 +114,10 @@ export default function CheckoutPage() {
 
       // Refresh wallet balance from backend after order
       refreshWallet();
+      const orderTotal = orderRes?.totalAmount || total;
+      const orderId = orderRes?._id;
       clearCart();
-      navigate('/orders');
+      navigate('/order-confirmation', { state: { orderId, total: orderTotal, paymentMethod: paymentChoice, orderType } });
     } catch (err) {
       setOrderError(err.message || 'Failed to place order. Please try again.');
     } finally {
@@ -438,6 +447,19 @@ export default function CheckoutPage() {
                     {paymentChoice === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-gray-800" />}
                   </button>
                 </div>
+
+                {/* Insufficient Wallet Warning */}
+                {paymentChoice === 'wallet' && walletBalance < total && (
+                  <div className="mt-3 bg-red-50 border border-red-100 rounded-2xl px-4 py-3 flex items-center gap-2.5">
+                    <Wallet size={14} className="text-red-400 flex-shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-bold text-red-600">Insufficient wallet balance</p>
+                      <p className="text-[9px] text-red-400 font-bold">
+                        You need ${(total - walletBalance).toFixed(2)} more. Top up your wallet or choose another payment method.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Place Order Button */}
