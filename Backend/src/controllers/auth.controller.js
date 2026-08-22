@@ -207,3 +207,34 @@ exports.updatePassword = async (req, res, next) => {
     next(err);
   }
 };
+
+// ── GET /api/v1/auth/wallet ────────────────────────────────────────────────
+exports.getWallet = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select("walletBalance");
+    res.status(200).json({ success: true, data: { walletBalance: user.walletBalance } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ── POST /api/v1/auth/wallet/topup ─────────────────────────────────────────
+exports.topUpWallet = async (req, res, next) => {
+  try {
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: "Please provide a valid amount" });
+    }
+    if (amount > 500) {
+      return res.status(400).json({ success: false, message: "Maximum top-up amount is $500" });
+    }
+
+    const user = await User.findById(req.user._id);
+    user.walletBalance = (user.walletBalance || 0) + Number(amount);
+    await user.save();
+
+    res.status(200).json({ success: true, data: { walletBalance: user.walletBalance } });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -95,6 +95,21 @@ export const authService = {
     return res.data;
   },
 
+  /** Get the logged-in user's wallet balance. */
+  getWallet: async () => {
+    const res = await apiRequest('/auth/wallet');
+    return res.data;
+  },
+
+  /** Top up the logged-in user's wallet. */
+  topUpWallet: async (amount) => {
+    const res = await apiRequest('/auth/wallet/topup', {
+      method: 'POST',
+      body: JSON.stringify({ amount }),
+    });
+    return res.data;
+  },
+
   /** Change the logged-in user's password. */
   updatePassword: async (currentPassword, newPassword) => {
     const res = await apiRequest('/auth/update-password', {

@@ -49,11 +49,15 @@ export default function CustomerLayout() {
     navigate('/login');
   };
 
-  const handleTopUpSubmit = (e) => {
+  const handleTopUpSubmit = async (e) => {
     e.preventDefault();
     if (Number(topUpAmount) > 0) {
-      topUpWallet(Number(topUpAmount));
-      setShowTopUp(false);
+      try {
+        await topUpWallet(Number(topUpAmount));
+        setShowTopUp(false);
+      } catch (err) {
+        alert(err.message || 'Top-up failed');
+      }
     }
   };
 

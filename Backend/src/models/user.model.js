@@ -48,6 +48,11 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    walletBalance: {
+        type: Number,
+        default: 0,
+        min: 0,
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
 }, { timestamps: true });

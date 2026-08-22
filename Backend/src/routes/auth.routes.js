@@ -95,5 +95,7 @@ router.put('/me', protect, authCtrl.updateMe);
 router.post('/forgot-password', authCtrl.forgotPassword);
 router.post('/reset-password/:token', authCtrl.resetPassword);
 router.put('/update-password', protect, authCtrl.updatePassword);
+router.get('/wallet', protect, authCtrl.getWallet);
+router.post('/wallet/topup', protect, authCtrl.topUpWallet);
 
 module.exports = router;

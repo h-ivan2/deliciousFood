@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { authService } from '../services/api';
 
 const CartContext = createContext();
 
@@ -22,10 +23,17 @@ export function CartProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [walletBalance, setWalletBalance] = useState(() => {
-    const saved = localStorage.getItem('df_wallet_balance');
-    return saved ? Number(saved) : 0;
-  });
+  const [walletBalance, setWalletBalance] = useState(0);
+
+  // Load wallet balance from backend on mount
+  useEffect(() => {
+    const token = localStorage.getItem('df_token');
+    if (token) {
+      authService.getWallet()
+        .then((data) => setWalletBalance(data.walletBalance || 0))
+        .catch(() => setWalletBalance(0));
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('df_cart_items', JSON.stringify(cartItems));
@@ -42,10 +50,6 @@ export function CartProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('df_booking_details', JSON.stringify(bookingDetails));
   }, [bookingDetails]);
-
-  useEffect(() => {
-    localStorage.setItem('df_wallet_balance', walletBalance.toString());
-  }, [walletBalance]);
 
   const addToCart = (item, restaurant) => {
     if (cartRestaurant && cartRestaurant._id !== restaurant._id) {
@@ -112,12 +116,27 @@ export function CartProvider({ children }) {
     return getSubtotal() + getDeliveryFee() + getTax();
   };
 
-  const topUpWallet = (amount) => {
-    setWalletBalance((prev) => prev + Number(amount));
+  const topUpWallet = async (amount) => {
+    try {
+      const data = await authService.topUpWallet(amount);
+      setWalletBalance(data.walletBalance);
+    } catch (err) {
+      console.error('Wallet top-up failed:', err);
+      throw err;
+    }
   };
 
   const deductWallet = (amount) => {
     setWalletBalance((prev) => Math.max(0, prev - Number(amount)));
+  };
+
+  const refreshWallet = async () => {
+    try {
+      const data = await authService.getWallet();
+      setWalletBalance(data.walletBalance || 0);
+    } catch (err) {
+      console.error('Failed to refresh wallet:', err);
+    }
   };
 
   return (
@@ -136,6 +155,7 @@ export function CartProvider({ children }) {
         setBookingDetails,
         topUpWallet,
         deductWallet,
+        refreshWallet,
         getSubtotal,
         getDeliveryFee,
         getTax,

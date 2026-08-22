@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, Moon, Sun, Bell, Lock, LogOut, User, Loader2, CheckCircle2 } from 'lucide-react';
+import { Settings, Moon, Sun, Bell, Lock, LogOut, User, Loader2, CheckCircle2, CreditCard } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { authService } from '../../services/api';
 
@@ -26,8 +26,23 @@ export default function SettingsPage() {
   const [pwSaving, setPwSaving] = useState(false);
   const [pwError, setPwError] = useState('');
 
+  const [payForm, setPayForm] = useState({ cardHolder: '', cardNumber: '', expiryDate: '', cvv: '' });
+  const [paySaving, setPaySaving] = useState(false);
+  const [payError, setPayError] = useState('');
+  const [showPayForm, setShowPayForm] = useState(false);
+
   useEffect(() => {
-    authService.fetchMe().then(setProfile).catch(() => navigate('/login'));
+    authService.fetchMe().then((user) => {
+      setProfile(user);
+      if (user?.paymentMethod) {
+        setPayForm({
+          cardHolder: user.paymentMethod.cardHolder || '',
+          cardNumber: user.paymentMethod.cardNumber || '',
+          expiryDate: user.paymentMethod.expiryDate || '',
+          cvv: '',
+        });
+      }
+    }).catch(() => navigate('/login'));
   }, [navigate]);
 
   useEffect(() => {
@@ -61,6 +76,41 @@ export default function SettingsPage() {
   const handleLogout = () => {
     authService.logout();
     navigate('/login');
+  };
+
+  const formatCardNumber = (value) => {
+    const raw = value.replace(/\D/g, '').slice(0, 16);
+    return raw.replace(/(\d{4})(?=\d)/g, '$1 ');
+  };
+
+  const formatExpiry = (value) => {
+    const raw = value.replace(/\D/g, '').slice(0, 4);
+    if (raw.length >= 3) return raw.slice(0, 2) + '/' + raw.slice(2);
+    return raw;
+  };
+
+  const handlePaymentSave = async (e) => {
+    e.preventDefault();
+    setPayError('');
+    setPaySaving(true);
+    try {
+      await authService.updateProfile({
+        paymentMethod: {
+          cardHolder: payForm.cardHolder,
+          cardNumber: payForm.cardNumber.replace(/\s/g, ''),
+          expiryDate: payForm.expiryDate,
+          cardType: '',
+        },
+      });
+      const fresh = await authService.fetchMe();
+      setProfile(fresh);
+      setShowPayForm(false);
+      showToast('Payment method updated');
+    } catch (err) {
+      setPayError(err.message || 'Failed to save payment method');
+    } finally {
+      setPaySaving(false);
+    }
   };
 
   const bg = dark ? '#070B14' : '#f8f5f0';
@@ -154,6 +204,84 @@ export default function SettingsPage() {
           <Row icon={<Bell size={18} />} title="Promotions & Offers" desc="Hear about deals and discounts">
             <Toggle on={prefs.promotions} onClick={() => togglePref('promotions')} />
           </Row>
+        </div>
+
+        {/* Payment Method */}
+        <div className="mt-6 rounded-3xl border p-6" style={{ background: cardBg, borderColor: borderCol }}>
+          <h2 className="font-extrabold text-base mb-2 flex items-center gap-2" style={{ color: textColor }}>
+            <CreditCard size={18} className="text-amber-500" /> Payment Method
+          </h2>
+          {profile?.hasPaymentMethod && !showPayForm ? (
+            <>
+              <div className="flex items-center gap-4 p-4 rounded-2xl border mb-4" style={{ background: inputBg, borderColor: borderCol }}>
+                <div className="w-12 h-9 rounded-lg flex items-center justify-center" style={{ background: 'rgba(245,179,1,0.12)' }}>
+                  <CreditCard size={18} style={{ color: '#F5B301' }} />
+                </div>
+                <div className="flex-1">
+                  <div className="text-xs font-bold" style={{ color: textColor }}>{profile.paymentMethod.cardNumber}</div>
+                  <div className="text-[10px]" style={{ color: textSub }}>{profile.paymentMethod.cardHolder} • Exp {profile.paymentMethod.expiryDate}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPayForm(true)}
+                className="px-5 py-2.5 rounded-xl text-xs font-black border cursor-pointer bg-transparent"
+                style={{ borderColor: '#F5B301', color: '#F5B301' }}
+              >
+                Update Card
+              </button>
+            </>
+          ) : showPayForm ? (
+            <form onSubmit={handlePaymentSave} className="flex flex-col gap-4 mt-3">
+              {payError && <div className="text-xs font-bold text-red-500 bg-red-500/10 rounded-xl px-4 py-3">{payError}</div>}
+              <input
+                type="text" placeholder="Cardholder Name" value={payForm.cardHolder}
+                onChange={(e) => setPayForm({ ...payForm, cardHolder: e.target.value })}
+                className="w-full rounded-2xl py-3.5 px-4 outline-none text-sm font-semibold" style={inputStyle} required
+              />
+              <input
+                type="text" placeholder="Card Number" value={payForm.cardNumber}
+                onChange={(e) => setPayForm({ ...payForm, cardNumber: formatCardNumber(e.target.value) })}
+                className="w-full rounded-2xl py-3.5 px-4 outline-none text-sm font-semibold" style={inputStyle}
+                maxLength={19} required
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="text" placeholder="MM/YY" value={payForm.expiryDate}
+                  onChange={(e) => setPayForm({ ...payForm, expiryDate: formatExpiry(e.target.value) })}
+                  className="w-full rounded-2xl py-3.5 px-4 outline-none text-sm font-semibold" style={inputStyle}
+                  maxLength={5} required
+                />
+                <input
+                  type="password" placeholder="CVV" value={payForm.cvv}
+                  onChange={(e) => setPayForm({ ...payForm, cvv: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                  className="w-full rounded-2xl py-3.5 px-4 outline-none text-sm font-semibold" style={inputStyle}
+                  maxLength={4} required
+                />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowPayForm(false)}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold border cursor-pointer" style={{ borderColor: borderCol, color: textSub, background: 'transparent' }}>
+                  Cancel
+                </button>
+                <button type="submit" disabled={paySaving}
+                  className="px-5 py-2.5 rounded-xl text-xs font-black border-none cursor-pointer bg-amber-500 text-black inline-flex items-center gap-2 disabled:opacity-60">
+                  {paySaving ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
+                  Save Card
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="text-center py-6">
+              <CreditCard size={32} className="mx-auto mb-3" style={{ color: textSub }} />
+              <p className="text-xs mb-4" style={{ color: textSub }}>No payment method added yet</p>
+              <button
+                onClick={() => setShowPayForm(true)}
+                className="px-5 py-2.5 rounded-xl text-xs font-black border-none cursor-pointer bg-amber-500 text-black"
+              >
+                Add Payment Method
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Security */}
