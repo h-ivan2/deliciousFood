@@ -126,8 +126,14 @@ export function CartProvider({ children }) {
     }
   };
 
-  const deductWallet = (amount) => {
-    setWalletBalance((prev) => Math.max(0, prev - Number(amount)));
+  const deductWallet = async (amount) => {
+    // Refresh from backend since the backend deducts on order placement
+    try {
+      const data = await authService.getWallet();
+      setWalletBalance(data.walletBalance || 0);
+    } catch {
+      setWalletBalance((prev) => Math.max(0, prev - Number(amount)));
+    }
   };
 
   const refreshWallet = async () => {

@@ -13,6 +13,8 @@ import {
   Clock,
   ChevronLeft,
   CreditCard,
+  Wallet,
+  Banknote,
   ArrowRight,
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -30,6 +32,7 @@ export default function CheckoutPage() {
     cartItems,
     cartRestaurant,
     orderType,
+    walletBalance,
     updateQuantity,
     removeFromCart,
     clearCart,
@@ -38,11 +41,13 @@ export default function CheckoutPage() {
     getDeliveryFee,
     getTax,
     getTotal,
+    refreshWallet,
   } = useCart();
 
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(null); // { type: string, discount: number, freeDelivery: bool }
   const [promoError, setPromoError] = useState('');
+  const [paymentChoice, setPaymentChoice] = useState('wallet'); // 'wallet' | 'cash' | 'card'
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [orderError, setOrderError] = useState('');
 
@@ -95,11 +100,13 @@ export default function CheckoutPage() {
       await customerService.placeOrder({
         restaurant: cartRestaurant?._id,
         items: orderItems,
-        orderType: 'delivery',
-        paymentMethod: 'cash',
+        orderType,
+        paymentMethod: paymentChoice,
         promoCode: promoApplied ? promoCode : undefined,
       });
 
+      // Refresh wallet balance from backend after order
+      refreshWallet();
       clearCart();
       navigate('/orders');
     } catch (err) {
@@ -377,6 +384,62 @@ export default function CheckoutPage() {
                 </div>
               )}
 
+              {/* Payment Method Selection */}
+              <div className="mb-4">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">Payment Method</p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => setPaymentChoice('wallet')}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-xs font-bold cursor-pointer transition-all ${
+                      paymentChoice === 'wallet'
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+                    }`}
+                  >
+                    <Wallet size={16} className={paymentChoice === 'wallet' ? 'text-emerald-500' : 'text-gray-400'} />
+                    <div className="flex-1 text-left">
+                      <div>Wallet</div>
+                      <div className="text-[9px] text-gray-400 mt-0.5">
+                        Balance: ${walletBalance.toFixed(2)} {walletBalance < total && <span className="text-red-400">(insufficient)</span>}
+                      </div>
+                    </div>
+                    {paymentChoice === 'wallet' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                  </button>
+
+                  <button
+                    onClick={() => setPaymentChoice('card')}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-xs font-bold cursor-pointer transition-all ${
+                      paymentChoice === 'card'
+                        ? 'border-amber-500 bg-amber-50 text-amber-700'
+                        : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+                    }`}
+                  >
+                    <CreditCard size={16} className={paymentChoice === 'card' ? 'text-amber-500' : 'text-gray-400'} />
+                    <div className="flex-1 text-left">
+                      <div>Credit / Debit Card</div>
+                      <div className="text-[9px] text-gray-400 mt-0.5">Pay with saved card</div>
+                    </div>
+                    {paymentChoice === 'card' && <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />}
+                  </button>
+
+                  <button
+                    onClick={() => setPaymentChoice('cash')}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-2xl border text-xs font-bold cursor-pointer transition-all ${
+                      paymentChoice === 'cash'
+                        ? 'border-gray-800 bg-gray-100 text-gray-800'
+                        : 'border-gray-100 bg-gray-50 text-gray-500 hover:border-gray-200'
+                    }`}
+                  >
+                    <Banknote size={16} className={paymentChoice === 'cash' ? 'text-gray-600' : 'text-gray-400'} />
+                    <div className="flex-1 text-left">
+                      <div>Cash on Delivery</div>
+                      <div className="text-[9px] text-gray-400 mt-0.5">Pay when you receive</div>
+                    </div>
+                    {paymentChoice === 'cash' && <div className="w-2.5 h-2.5 rounded-full bg-gray-800" />}
+                  </button>
+                </div>
+              </div>
+
               {/* Place Order Button */}
               <button
                 onClick={handlePlaceOrder}
@@ -408,11 +471,11 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              {/* Wallet Info */}
+              {/* Trust Info */}
               <div className="mt-4 bg-gray-50 rounded-2xl px-4 py-3 flex items-center gap-3">
                 <CreditCard size={16} className="text-gray-400" />
                 <div className="text-[10px] font-bold text-gray-500">
-                  Pay with wallet or cash on delivery
+                  Your payment is encrypted and secure
                 </div>
               </div>
             </div>

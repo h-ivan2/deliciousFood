@@ -1,6 +1,7 @@
 const Order = require("../models/order.model");
 const MenuItem = require("../models/menuItem.model");
 const Restaurant = require("../models/restaurant.model");
+const User = require("../models/user.model");
 
 // @desc    Place order
 // @route   POST /api/v1/orders
@@ -57,6 +58,20 @@ exports.placeOrder = async (req, res, next) => {
     const deliveryFee = orderType === "delivery" ? restaurant.deliveryFee : 0;
     const tax = subtotal * 0.1;
     const totalAmount = subtotal + deliveryFee + tax;
+
+    // If paying with wallet, check balance and deduct
+    let walletDeducted = false;
+    if (paymentMethod === "wallet") {
+      const user = await User.findById(req.user._id);
+      if (!user || (user.walletBalance || 0) < totalAmount) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Insufficient wallet balance" });
+      }
+      user.walletBalance = user.walletBalance - totalAmount;
+      await user.save({ validateBeforeSave: false });
+      walletDeducted = true;
+    }
 
     const order = await Order.create({
       customer: req.user._id,

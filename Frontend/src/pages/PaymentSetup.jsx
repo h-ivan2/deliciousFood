@@ -53,6 +53,11 @@ export default function PaymentSetup() {
       navigate('/login');
       return;
     }
+    // Only customers should access this page
+    if (user.role !== 'customer') {
+      navigate(user.role === 'owner' ? '/owner' : '/admin');
+      return;
+    }
     // If user already has a payment method, skip to dashboard
     if (user.hasPaymentMethod) {
       navigate('/explore');
