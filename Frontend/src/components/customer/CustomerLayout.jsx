@@ -25,12 +25,10 @@ import { Logo, ThemeToggle } from '../ui';
 export default function CustomerLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cartItems, walletBalance, topUpWallet } = useCart();
+  const { cartItems, walletBalance } = useCart();
   const { dark } = useTheme();
   const [currentUser, setCurrentUser] = useState(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  const [showTopUp, setShowTopUp] = useState(false);
-  const [topUpAmount, setTopUpAmount] = useState('20.00');
 
   useEffect(() => {
     const user = authService.getCurrentUser();
@@ -49,22 +47,13 @@ export default function CustomerLayout() {
     navigate('/login');
   };
 
-  const handleTopUpSubmit = async (e) => {
-    e.preventDefault();
-    if (Number(topUpAmount) > 0) {
-      try {
-        await topUpWallet(Number(topUpAmount));
-        setShowTopUp(false);
-      } catch (err) {
-        alert(err.message || 'Top-up failed');
-      }
-    }
-  };
+
 
   const NAV_ITEMS = [
     { to: '/explore', label: 'Home', icon: Home },
     { to: '/browse', label: 'Browse Restaurants', icon: Compass },
     { to: '/orders', label: 'Orders', icon: ShoppingBag },
+    { to: '/wallet', label: 'My Wallet', icon: Wallet },
     { to: '/favorites', label: 'Favorites', icon: Heart },
     { to: '/offers', label: 'Offers', icon: Percent },
     { to: '/profile', label: 'Profile', icon: User },
@@ -240,7 +229,7 @@ export default function CustomerLayout() {
 
             {/* Wallet Balance Widget */}
             <div 
-              onClick={() => setShowTopUp(true)}
+              onClick={() => navigate('/wallet')}
               className="flex items-center gap-2 px-3 py-1.5 rounded-2xl cursor-pointer transition-colors"
               style={{
                 background: dark ? 'rgba(16,185,129,0.1)' : '#ecfdf5',
@@ -326,62 +315,6 @@ export default function CustomerLayout() {
         </main>
       </div>
 
-      {/* ─── WALLET TOP UP MODAL ─── */}
-      {showTopUp && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div
-            className="rounded-[32px] p-8 max-w-sm w-full shadow-2xl border animate-in fade-in zoom-in duration-200"
-            style={{ background: cardBg, borderColor: borderCol }}
-          >
-            <h3 className="font-extrabold text-lg mb-2" style={{ color: textColor }}>Top Up Wallet</h3>
-            <p className="text-xs font-medium mb-6" style={{ color: textMuted }}>Add credits to your account for quick and seamless ordering.</p>
-            
-            <form onSubmit={handleTopUpSubmit} className="flex flex-col gap-4">
-              <div>
-                <label className="block text-xs font-bold mb-2" style={{ color: textSub }}>Amount to Add ($)</label>
-                <input
-                  type="number"
-                  min="5"
-                  max="500"
-                  step="0.01"
-                  value={topUpAmount}
-                  onChange={(e) => setTopUpAmount(e.target.value)}
-                  className="w-full border rounded-2xl px-4 py-3 outline-none text-base font-extrabold transition-colors"
-                  style={{
-                    background: mutedBg,
-                    borderColor: borderCol,
-                    color: textColor,
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = '#F5B301'; e.target.style.background = dark ? 'rgba(245,179,1,0.05)' : '#fff'; }}
-                  onBlur={(e) => { e.target.style.borderColor = borderCol; e.target.style.background = mutedBg; }}
-                  required
-                />
-              </div>
-
-              <div className="flex gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowTopUp(false)}
-                  className="flex-1 font-bold text-xs py-3 rounded-2xl border cursor-pointer transition-colors"
-                  style={{
-                    background: mutedBg,
-                    borderColor: borderCol,
-                    color: textSub,
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-black py-3 rounded-2xl font-black text-xs border-none cursor-pointer transition-colors shadow-sm"
-                >
-                  Top Up
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import FavoritesPage from './pages/customer/FavoritesPage';
 import OffersPage from './pages/customer/OffersPage';
 import SettingsPage from './pages/customer/SettingsPage';
 import OrderConfirmation from './pages/customer/OrderConfirmation';
+import WalletTopUp from './pages/customer/WalletTopUp';
 
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboardHome from './pages/admin/AdminDashboardHome';
@@ -63,6 +64,7 @@ export default function App() {
               <Route path="/restaurant/:id/reserve"     element={<TableReservation />} />
               <Route path="/checkout"                   element={<CheckoutPage />} />
               <Route path="/order-confirmation"          element={<OrderConfirmation />} />
+              <Route path="/wallet"                      element={<WalletTopUp />} />
               <Route path="/orders"                     element={<OrdersPage />} />
               <Route path="/reservations"               element={<ReservationsPage />} />
               <Route path="/dashboard"                  element={<UserDashboard />} />
